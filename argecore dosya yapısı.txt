@@ -1,0 +1,31 @@
+argecore/
+│
+├── argecore/                # Django ana proje ayarları
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py / asgi.py
+│
+├── domain/                  # Core business logic
+│   ├── models/              # Domain modelleri (Entity'ler)
+│   │   └── machine.py
+│   ├── services/            # Business logic / use-cases
+│   │   └── machine_service.py
+│   └── repositories/        # Interface üzerinden DB erişimi
+│       └── machine_repository.py
+│
+├── infrastructure/          # Veri erişimi, dış API, DB bağlantıları
+│   ├── repositories/        # Domain repository implementasyonu
+│   │   └── machine_repository_impl.py
+│   └── db/                  # Migration veya özel DB konfig
+│
+├── interfaces/              # DRF API layer
+│   ├── serializers/         # DRF Serializers
+│   │   └── machine_serializer.py
+│   ├── viewsets/            # DRF ViewSets
+│   │   └── machine_viewset.py
+│   └── urls.py              # API URL router
+│
+├── service/                 # Global services, helperler
+│   └── notifications.py
+│
+└── manage.py
