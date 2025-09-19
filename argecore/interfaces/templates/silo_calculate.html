@@ -68,6 +68,11 @@
         animation: spin 1s linear infinite;
     }
 
+    .mychart_css {
+        width: 90%;
+        height: 500px;
+    }
+
     @keyframes spin {
         0% {
             transform: rotate(0deg);
@@ -92,47 +97,52 @@
       <div class="col-md-6">
         <form id="silo_calculate">
           <h4 class="text-center">Şekil Seçimi</h4>
-          <div class="mb-3">
-            <label for="particulate" class="form-label">Ürün</label>
-            <select id="particulate" class="form-select" onchange="cb_particulate()">
-              <option value="">Yükleniyor...</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label for="height" class="form-label">Yükseklik (hc mm)</label>
-            <input type="number" class="form-control calc-input" id="height" placeholder="Yüksekliği giriniz">
-          </div>
-          <div class="mb-3">
-            <label for="height_konik" class="form-label">Konik Yükseklik (hh mm)</label>
-            <input type="number" class="form-control calc-input" id="height_konik" placeholder="Yüksekliği giriniz">
-          </div>
+          <div class="row">
+            <div class="col-6">
+              <div class="mb-3">
+                <label for="particulate" class="form-label">Ürün</label>
+                <select id="particulate" class="form-select" onchange="cb_particulate()">
+                  <option value="">Yükleniyor...</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="height" class="form-label">Yükseklik (hc mm)</label>
+                <input type="number" class="form-control calc-input" id="height" placeholder="Yüksekliği giriniz">
+              </div>
+              <div class="mb-3">
+                <label for="height_konik" class="form-label">Konik Yükseklik (hh mm)</label>
+                <input type="number" class="form-control calc-input" id="height_konik" placeholder="Yüksekliği giriniz">
+              </div>
+              <div class="mb-3">
+                <label for="degress" class="form-label">Açı (ß)</label>
+                <input type="number" class="form-control calc-input" id="degress" placeholder="Açıyı giriniz">
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="dropdown mb-3">
+                <label for="comboInput" class="form-label">Şekil</label>
+                <input type="text" id="comboInput" class="form-control" placeholder="Seç veya yaz...">
+                <ul class="dropdown-menu combobox-list w-100" id="comboList">
+                  <li class="dropdown-item">Kare</li>
+                  <li class="dropdown-item">Dikdörtgen</li>
+                  <li class="dropdown-item">Daire</li>
+                  <li class="dropdown-item">Diğer</li>
+                </ul>
+              </div>
+              <!-- Dinamik alanlar -->
+              <div id="dynamicFields"></div>
+              <div class="mb-3">
+                <label for="height_range" class="form-label">Hesaplama aralığı (mm)</label>
+                <input type="number" class="form-control calc-input" id="height_range" placeholder="Aralık giriniz">
+              </div>
 
-                  <div class="mb-3">
-            <label for="degress" class="form-label">Açı (ß)</label>
-            <input type="number" class="form-control calc-input" id="degress" placeholder="Açıyı giriniz">
-          </div>
-          <div class="dropdown mb-3">
-            <label for="comboInput" class="form-label">Şekil</label>
-            <input type="text" id="comboInput" class="form-control" placeholder="Seç veya yaz...">
-            <ul class="dropdown-menu combobox-list w-100" id="comboList">
-              <li class="dropdown-item">Kare</li>
-              <li class="dropdown-item">Dikdörtgen</li>
-              <li class="dropdown-item">Daire</li>
-              <li class="dropdown-item">Diğer</li>
-            </ul>
-          </div>
-          <!-- Dinamik alanlar -->
-          <div id="dynamicFields"></div>
+              <div class="mb-3">
+                <label for="height_range_konik" class="form-label">Konik Hesaplama aralığı (mm)</label>
+                <input type="number" class="form-control calc-input" id="height_range_konik" placeholder="Aralık giriniz">
+              </div>
+            </div>
+          </div>  
 
-          <div class="mb-3">
-            <label for="height_range" class="form-label">Hesaplama aralığı (mm)</label>
-            <input type="number" class="form-control calc-input" id="height_range" placeholder="Aralık giriniz">
-          </div>
-
-          <div class="mb-3">
-            <label for="height_range_konik" class="form-label">Konik Hesaplama aralığı (mm)</label>
-            <input type="number" class="form-control calc-input" id="height_range_konik" placeholder="Aralık giriniz">
-          </div>
           <!-- <input type="hidden" name="tabloId_MACK" id="tabloId_FKLM" value=""> -->
           <!-- <input type="hidden" name="action_MACK" id="action_FKLM" value=""> -->
         </form>
@@ -147,14 +157,62 @@
             <span class="text-muted">Henüz bir şekil seçilmedi</span>
           </div>
         </div>
-        <div class="row row-chart p-2">
-          <!-- Yüklenme çubuğu -->
-          <div id="loadingFillPressures" class="loading-spinner" style="display: none;">
-              <div class="spinner"></div>
-              <p>Yükleniyor...</p>
-          </div>
-          <div id="lineChartFillPressures" class="mychart_css"></div>
+        
       </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+        <div class="row row-chart p-2">
+            <!-- Yüklenme çubuğu -->
+            <div id="loadingFillPressures" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Yükleniyor...</p>
+            </div>
+            <div id="lineChartFillPressures" class="mychart_css"></div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="row row-chart p-2">
+            <!-- Yüklenme çubuğu -->
+            <div id="loadingDiscPressures" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Yükleniyor...</p>
+            </div>
+            <div id="lineChartDiscPressures" class="mychart_css"></div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="row row-chart">
+            <!-- Yüklenme çubuğu -->
+            <div id="loadingFillHopperPressures" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Yükleniyor...</p>
+            </div>
+            <div id="lineChartFillHopperPressures" class="mychart_css"></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+        <div class="row row-chart p-2">
+            <!-- Yüklenme çubuğu -->
+            <div id="loadingDiscHopperPressures" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Yükleniyor...</p>
+            </div>
+            <div id="lineChartDiscHopperPressures" class="mychart_css"></div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="row row-chart p-2">
+            <!-- Yüklenme çubuğu -->
+            <div id="loadingFillDiscHopperPressures" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Yükleniyor...</p>
+            </div>
+            <div id="lineChartFillDiscHopperPressures" class="mychart_css"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -383,6 +441,10 @@
         // Fetch and render all charts
     function fetchAllCharts() {
         getChartData('/fill-pressures', 'fillPressures', 'FillPressures', "/api");
+        getChartData('/disc-pressures', 'discPressures', 'DiscPressures', "/api");
+        getChartData('/fill-hopper', 'fillHopperPressures', 'FillHopperPressures', "/api");
+        getChartData('/disc-hopper', 'discHopperPressures', 'DiscHopperPressures', "/api");
+        getChartData('/fill--disc-hopper', 'fillDiscHopperPressures', 'FillDiscHopperPressures', "/api");
     }
 
 

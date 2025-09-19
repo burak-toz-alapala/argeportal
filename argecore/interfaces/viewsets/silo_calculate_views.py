@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from domain.models import Material
 from domain.services import SiloCalculator
 from ..serializers.silo_calculate_serializers import SiloCalculationSerializer, MaterialSerializer, MaterialComboboxSerializer
-from ..serializers.silo_calculate_serializers import PressureDataSerializer
+from ..serializers.silo_calculate_serializers import PressureDataSerializer, PressureFillHopperDataSerializer, PressureDiscHopperDataSerializer
 
 class SiloCalculationView(APIView):
     def post(self, request):
@@ -43,7 +43,7 @@ class MaterialComboboxViewSet(viewsets.ModelViewSet):
     # pagination_class = LargePagination
     
 
-class PressureDataView(APIView):
+class PressureFillDataView(APIView):
     def get(self, request):
         data = [
             {"z": 0.00, "Phf": 0.00000, "Pwf": 0.00000, "Pvf": 0.00000},
@@ -78,3 +78,146 @@ class PressureDataView(APIView):
             ]
         }
         return Response(response)
+
+class PressureDischargeDataView(APIView):
+    def get(self, request):
+        data = [
+            {"z": 0.00, "Phf": 0.00000, "Pwf": 0.00000, "Pvf": 0.00000},
+            {"z": 2000.00, "Phf": 0.01181, "Pwf": 0.00266, "Pvf": 0.01067},
+            {"z": 4000.00, "Phf": 0.01849, "Pwf": 0.00417, "Pvf": 0.01670},
+            {"z": 6000.00, "Phf": 0.02227, "Pwf": 0.00502, "Pvf": 0.02011},
+            {"z": 8000.00, "Phf": 0.02440, "Pwf": 0.00550, "Pvf": 0.02204},
+            {"z": 10000.00, "Phf": 0.02561, "Pwf": 0.00577, "Pvf": 0.02313},
+            {"z": 12000.00, "Phf": 0.02629, "Pwf": 0.00592, "Pvf": 0.02375},
+            {"z": 14000.00, "Phf": 0.02668, "Pwf": 0.00601, "Pvf": 0.02410},
+            {"z": 16000.00, "Phf": 0.02689, "Pwf": 0.00606, "Pvf": 0.02429},
+            {"z": 18000.00, "Phf": 0.02702, "Pwf": 0.00609, "Pvf": 0.02441},
+            {"z": 20000.00, "Phf": 0.02709, "Pwf": 0.00610, "Pvf": 0.02447},
+        ]
+        serializer = PressureDataSerializer(data, many=True)
+        raw_data = serializer.data
+
+        # x ekseni (z değerleri)
+        z_list = [row["z"] for row in raw_data]
+
+        # y eksenleri (Phf, Pwf, Pvf değerleri)
+        phf = [row["Phf"] for row in raw_data]
+        pwf = [row["Pwf"] for row in raw_data]
+        pvf = [row["Pvf"] for row in raw_data]
+
+        response = {
+            "z_list": z_list,
+            "series": [
+                {"name": "Horizontal pressure Phf", "values": phf},
+                {"name": "Wall friction traction Pwf", "values": pwf},
+                {"name": "Vertical pressure Pvf", "values": pvf},
+            ]
+        }
+        return Response(response)
+
+class PressureFillHopperDataView(APIView):
+    def get(self, request):
+        data = [
+            {"x": 0.00, "Pnf": 0.00000, "Ptf": 0.00000},
+            {"x": 250.00, "Pnf": 0.01004, "Ptf": 0.00286},
+            {"x": 500.00, "Pnf": 0.01523, "Ptf": 0.00433},
+            {"x": 750.00, "Pnf": 0.01906, "Ptf": 0.00542},
+            {"x": 1000.00, "Pnf": 0.02208, "Ptf": 0.00628},
+            {"x": 1250.00, "Pnf": 0.02455, "Ptf": 0.00698},
+            {"x": 1500.00, "Pnf": 0.02659, "Ptf": 0.00756},
+            {"x": 1750.00, "Pnf": 0.02829, "Ptf": 0.00805},
+            {"x": 2000.00, "Pnf": 0.02971, "Ptf": 0.00845},
+        ]
+
+        serializer = PressureFillHopperDataSerializer(data, many=True)
+        raw_data = serializer.data
+
+        # x ekseni (z değerleri)
+        x_list = [row["x"] for row in raw_data]
+
+        # y eksenleri (Pnf, Pwf, Pvf değerleri)
+        pnf = [row["Pnf"] for row in raw_data]
+        ptf = [row["Ptf"] for row in raw_data]
+
+
+        response = {
+            "x_list": x_list,
+            "series": [
+                {"name": "Horizontal pressure Pnf", "values": pnf},
+                {"name": "Wall friction traction Ptf", "values": ptf},
+            ]
+        }
+        return Response(response)
+    
+class PressureDischargeHopperDataView(APIView):
+    def get(self, request):
+        data = [
+            {"x": 0.00, "Pne": 0.00000, "Pte": 0.00000},
+            {"x": 250.00, "Pne": 0.00262, "Pte": 0.00075},
+            {"x": 500.00, "Pne": 0.00600, "Pte": 0.00171},
+            {"x": 750.00, "Pne": 0.01017, "Pte": 0.00289},
+            {"x": 1000.00, "Pne": 0.01512, "Pte": 0.00430},
+            {"x": 1250.00, "Pne": 0.02089, "Pte": 0.00594},
+            {"x": 1500.00, "Pne": 0.02747, "Pte": 0.00781},
+            {"x": 1750.00, "Pne": 0.03487, "Pte": 0.00992},
+            {"x": 2000.00, "Pne": 0.04309, "Pte": 0.01226},
+        ]
+
+
+        serializer = PressureDiscHopperDataSerializer(data, many=True)
+        raw_data = serializer.data
+
+        # x ekseni (z değerleri)
+        x_list = [row["x"] for row in raw_data]
+
+        # y eksenleri (Pnf, Pwf, Pvf değerleri)
+        pne = [row["Pne"] for row in raw_data]
+        pte = [row["Pte"] for row in raw_data]
+
+
+        response = {
+            "x_list": x_list,
+            "series": [
+                {"name": "Horizontal pressure Pne", "values": pne},
+                {"name": "Wall friction traction Pt3", "values": pte},
+            ]
+        }
+        return Response(response)
+    
+    
+class PressureFillAndDischargeHopperDataView(APIView):
+    def get(self, request):
+        data = [
+            {"x": 0.00, "Pnf": 0.00000, "Ptf": 0.00000},
+            {"x": 250.00, "Pnf": 0.00487, "Ptf": 0.00217},
+            {"x": 500.00, "Pnf": 0.00905, "Ptf": 0.00402},
+            {"x": 750.00, "Pnf": 0.01287, "Ptf": 0.00573},
+            {"x": 1000.00, "Pnf": 0.01645, "Ptf": 0.00732},
+            {"x": 1250.00, "Pnf": 0.01983, "Ptf": 0.00882},
+            {"x": 1500.00, "Pnf": 0.02304, "Ptf": 0.01025},
+            {"x": 1750.00, "Pnf": 0.02611, "Ptf": 0.01161},
+            {"x": 2000.00, "Pnf": 0.02904, "Ptf": 0.01292},
+        ]
+
+
+
+        serializer = PressureFillHopperDataSerializer(data, many=True)
+        raw_data = serializer.data
+
+        # x ekseni (z değerleri)
+        x_list = [row["x"] for row in raw_data]
+
+        # y eksenleri (Pnf, Pwf, Pvf değerleri)
+        pnf = [row["Pnf"] for row in raw_data]
+        ptf = [row["Ptf"] for row in raw_data]
+
+
+        response = {
+            "x_list": x_list,
+            "series": [
+                {"name": "Horizontal pressure Pnf", "values": pnf},
+                {"name": "Wall friction traction Ptf", "values": ptf},
+            ]
+        }
+        return Response(response)
+    

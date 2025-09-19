@@ -35,3 +35,13 @@ class PressureDataSerializer(serializers.Serializer):
     Phf = serializers.FloatField()
     Pwf = serializers.FloatField()
     Pvf = serializers.FloatField()
+
+class PressureFillHopperDataSerializer(serializers.Serializer):
+    x = serializers.FloatField()
+    Pnf = serializers.FloatField()
+    Ptf = serializers.FloatField()
+
+class PressureDiscHopperDataSerializer(serializers.Serializer):
+    x = serializers.FloatField()
+    Pne = serializers.FloatField()
+    Pte = serializers.FloatField()

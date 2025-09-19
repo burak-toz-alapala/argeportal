@@ -1,6 +1,10 @@
       // Initialize ECharts instances for each chart element
     var chartInstances = {
-        fillPressures: echarts.init(document.getElementById('lineChartFillPressures'))
+        fillPressures: echarts.init(document.getElementById('lineChartFillPressures')),
+        discPressures: echarts.init(document.getElementById('lineChartDiscPressures')),
+        fillHopperPressures: echarts.init(document.getElementById('lineChartFillHopperPressures')),
+        discHopperPressures: echarts.init(document.getElementById('lineChartDiscHopperPressures')),
+        fillDiscHopperPressures: echarts.init(document.getElementById('lineChartFillDiscHopperPressures'))
     };
 
     // Configurations for each chart's title text
@@ -73,7 +77,8 @@ function createChartOption(dates, seriesData, titleText) {
             top: '20%', // Grafik ile başlık arasındaki boşluğu ayarlamak için grafiğin üst kısmındaki boşluğu artırıyoruz
             left: '5%',
             right: '5%',
-            bottom: '5%'
+            bottom: '5%',
+            containLabel: true
         },
         toolbox: {
             right: 10,
@@ -105,7 +110,17 @@ function createChartOption(dates, seriesData, titleText) {
             pageButtonGap: 5, // Sayfa düğmeleri ile içerik arası boşluk
         },
         xAxis: { type: 'category', data: dates },
-        yAxis: { type: 'value' },
+        yAxis: { 
+            type: 'value', 
+            interval: 0.005,
+            axisLabel: {
+                // margin: 20 // Y eksenindeki yazılar için kenar boşluğu
+                formatter: function (value) {
+                    // value: Eksenin sayısal değeri
+                    return value.toFixed(3); // Sayıyı virgülden sonra 4 basamaklı gösterir
+                }
+            }
+         },
         series: seriesData.map(serie => ({
             name: serie.name,
             data: serie.values,
