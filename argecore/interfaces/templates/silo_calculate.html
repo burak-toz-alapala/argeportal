@@ -132,12 +132,12 @@
               <!-- Dinamik alanlar -->
               <div id="dynamicFields"></div>
               <div class="mb-3">
-                <label for="height_range" class="form-label">Hesaplama aralığı (mm)</label>
+                <label for="height_range" class="form-label">Yükseklik adım aralığı (mm)</label>
                 <input type="number" class="form-control calc-input" id="height_range" placeholder="Aralık giriniz">
               </div>
 
               <div class="mb-3">
-                <label for="height_range_konik" class="form-label">Konik Hesaplama aralığı (mm)</label>
+                <label for="height_range_konik" class="form-label">Konik adım aralığı (mm)</label>
                 <input type="number" class="form-control calc-input" id="height_range_konik" placeholder="Aralık giriniz">
               </div>
             </div>
@@ -153,9 +153,8 @@
       <div class="col-md-4">
         <div class="row">
           <h4 class="text-center">Seçilen Şekil</h4>
-          <div class="shape-preview" id="shapePreview">
-            <span class="text-muted">Henüz bir şekil seçilmedi</span>
-          </div>
+          <img src="{% get_media_prefix %}images/sekil_5.png" style="width: 100%;" alt="geometry_1">
+          <div id="shapePreview"></div>
         </div>
         
       </div>
@@ -182,7 +181,7 @@
         </div>
       </div>
       <div class="col-md-4">
-        <div class="row row-chart">
+        <div class="row row-chart p-2">
             <!-- Yüklenme çubuğu -->
             <div id="loadingFillHopperPressures" class="loading-spinner" style="display: none;">
                 <div class="spinner"></div>
@@ -299,7 +298,7 @@
           ${alan !== null ? `<p><strong>Hacim:</strong> ${alan.toFixed(2)}</p>` : ""}
           ${type !== null ? `<p><strong>Silo tipi:</strong> ${type}</p>` : ""}
         `;
-        preview.innerHTML = resultHtml;
+        // preview.innerHTML = resultHtml;
       }
 
       // Inputa focus olunca aç
@@ -326,7 +325,7 @@
           fields.innerHTML = "";
 
           // Resmi + boş sonuç alanı göster
-          preview.innerHTML = `<img src="${images[selected]}" alt="${selected}">`;
+          // preview.innerHTML = `<img src="${images[selected]}" alt="${selected}">`;
 
           // Seçime göre input alanları
           let inputsHtml = "";
@@ -363,8 +362,8 @@
                 <input type="number" class="form-control calc-input" id="perimeter" placeholder="Çevre giriniz">
               </div>
               <div class="mb-3">
-                <label for="width" class="form-label">Genişlik</label>
-                <input type="number" class="form-control calc-input" id="width" placeholder="Genişliği giriniz">
+                <label for="width" class="form-label">dc</label>
+                <input type="number" class="form-control calc-input" id="width" placeholder="dc giriniz">
               </div>`;
           }
 
@@ -437,6 +436,24 @@
           }
       });
     }
+
+          // Initialize ECharts instances for each chart element
+    var chartInstances = {
+        fillPressures: echarts.init(document.getElementById('lineChartFillPressures')),
+        discPressures: echarts.init(document.getElementById('lineChartDiscPressures')),
+        fillHopperPressures: echarts.init(document.getElementById('lineChartFillHopperPressures')),
+        discHopperPressures: echarts.init(document.getElementById('lineChartDiscHopperPressures')),
+        fillDiscHopperPressures: echarts.init(document.getElementById('lineChartFillDiscHopperPressures'))
+    };
+
+    // Configurations for each chart's title text
+    var chartTitles = {
+        fillPressures: 'Filling Pressures',
+        discPressures: 'Discharge Pressures',
+        fillHopperPressures: 'Filling Pressures, Steep hoppers',
+        discHopperPressures: 'Discharge Pressures, Steep hoppers',
+        fillDiscHopperPressures: 'Filling And Discharge Pressures, Steep hoppers',
+    };
 
         // Fetch and render all charts
     function fetchAllCharts() {

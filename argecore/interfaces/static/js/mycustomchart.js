@@ -1,16 +1,3 @@
-      // Initialize ECharts instances for each chart element
-    var chartInstances = {
-        fillPressures: echarts.init(document.getElementById('lineChartFillPressures')),
-        discPressures: echarts.init(document.getElementById('lineChartDiscPressures')),
-        fillHopperPressures: echarts.init(document.getElementById('lineChartFillHopperPressures')),
-        discHopperPressures: echarts.init(document.getElementById('lineChartDiscHopperPressures')),
-        fillDiscHopperPressures: echarts.init(document.getElementById('lineChartFillDiscHopperPressures'))
-    };
-
-    // Configurations for each chart's title text
-    var chartTitles = {
-        fillPressures: 'Fill Pressures'
-    };
 
     var chartNameList = ['FillPressures'];
     var colorList = ["#ff5733", "#2ecc71", "#3498db", "#f39c12", "#9b59b6", "#1abc9c"];
