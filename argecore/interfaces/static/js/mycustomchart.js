@@ -1,6 +1,6 @@
 
     var chartNameList = ['FillPressures'];
-    var colorList = ["#ff5733", "#2ecc71", "#3498db", "#f39c12", "#9b59b6", "#1abc9c"];
+    var colorList = ["#ff5733", "#f39c12", "#9b59b6", "#24e58f", "#00d2ff", "#0077b6", "#182c50"];
 
     // Kullanılmış renkleri takip etmek için bir Set
     var usedColors = new Set();

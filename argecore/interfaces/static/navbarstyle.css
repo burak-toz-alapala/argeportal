@@ -1,0 +1,66 @@
+.aqua-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+ background: linear-gradient(-90deg, #182c50, #0077b6);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+     /* Diğer kenarlıkları sıfırla */
+  border-top: 0;
+  border-right: 0;
+  border-left: 0;
+  
+  /* Alt kenarlık için bir kalınlık ve stil belirt */
+  border-bottom: 2px solid transparent; 
+  
+  /* Sadece alt kenara linear-gradient uygula */
+border-image: linear-gradient(90deg, #24e58f, #00d2ff) 1;
+  border-image-slice: 1;
+  height: 50px;
+}
+
+.aqua-navbar .logo {
+  color: #fff;
+  text-decoration: none;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+.aqua-navbar .left-section {
+  display: flex;
+  align-items: center;
+  gap: 20px; /* Buton ve logo arasına boşluk ekler */
+  font-family: Orbitron-Bold;
+}
+
+.aqua-navbar .nav-links a {
+  color: #b3c5cd;
+  text-decoration: none;
+  margin-left: 30px;
+  font-size: 17px;
+  font-weight: 500;
+  transition: color 0.4s ease;
+  position: relative;
+}
+
+.aqua-navbar .nav-links a:hover {
+  color: #fff;
+}
+
+.aqua-navbar .nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #00d2ff, #24e58f);
+  transform: scaleX(0);
+  transform-origin: bottom right;
+  transition: transform 0.4s ease-out;
+}
+
+.aqua-navbar .nav-links a:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}

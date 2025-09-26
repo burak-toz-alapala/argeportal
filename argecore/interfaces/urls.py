@@ -17,4 +17,5 @@ urlpatterns = [
     path("api/fill--disc-hopper/", PressureFillAndDischargeHopperDataView.as_view(), name="pressure-data-fill-discharge-hopper"),
     path('api/', include(router.urls)),
     path('', home_page, name='home'),
+    path('tmp', tmp_page, name='tmp'),
 ]
