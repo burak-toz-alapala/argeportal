@@ -40,3 +40,28 @@ class Material(models.Model):
 
     def __str__(self):
         return self.name
+    
+    @property
+    def internal_friction_upper(self):
+        """φᵢ upper = mean * factor"""
+        return round(self.internal_friction_mean * (self.internal_friction_factor / 100))
+
+    @property
+    def internal_friction_lower(self):
+        """φᵢ lower = mean / factor"""
+        if self.internal_friction_factor == 0:
+            return 0
+        return round(self.internal_friction_mean / (self.internal_friction_factor / 100))
+    
+    # --- Lateral pressure hesaplamaları ---
+    @property
+    def lateral_pressure_upper(self):
+        """K upper = mean * factor"""
+        return round(self.lateral_pressure_mean * (self.lateral_pressure_factor / 100))
+
+    @property
+    def lateral_pressure_lower(self):
+        """K lower = mean / factor"""
+        if self.lateral_pressure_factor == 0:
+            return 0
+        return round(self.lateral_pressure_mean / (self.lateral_pressure_factor / 100))
