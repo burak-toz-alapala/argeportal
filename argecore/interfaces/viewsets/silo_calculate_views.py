@@ -320,21 +320,21 @@ def format_silo_pressures_for_chart(pressure_list, ch=1, cw=1, x_name="z (mm)", 
         dict: {"z_list": [...], "series": [{"name": ..., "values": [...]}, ...]}
     """
     # z değerlerini 1000 ile çarp ve 2 decimal
-    z_list = [round(row['depth'] * 1000, 2) for row in pressure_list]
+    z_list = [round(row['depth'], 2) for row in pressure_list]
     
     # Katsayılarla çarpılmış değerler
-    phf = [row['horizontal_pressure'] * ch for row in pressure_list]
-    pwf = [row['wall_friction'] * cw for row in pressure_list]
-    pvf = [row['vertical_pressure'] for row in pressure_list]
+    phf = [round((row['horizontal_pressure'] * ch),5) for row in pressure_list]
+    pwf = [round((row['wall_friction'] * cw),5) for row in pressure_list]
+    pvf = [round((row['vertical_pressure']),5)for row in pressure_list]
 
     response = {
         "x_name": x_name,
         "y_name": y_name,
         "dates": z_list,
         "series": [
-            {"name": "Horizontal pressure Phf", "values": phf},
-            {"name": "Wall friction traction Pwf", "values": pwf},
-            {"name": "Vertical pressure Pvf", "values": pvf},
+            {"name": "Yatay Basınç Phf", "values": phf},
+            {"name": "Duvar sürtünmesi Pwf", "values": pwf},
+            {"name": "Dikey Basınç Pvf", "values": pvf},
         ]
     }
     return response
