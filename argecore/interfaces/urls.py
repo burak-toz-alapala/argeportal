@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .viewsets.silo_calculate_views import SiloCalculationView, MaterialViewSet, MaterialComboboxViewSet
+from .viewsets.silo_calculate_views import SiloCalculationView, MaterialViewSet, MaterialComboboxViewSet, SiloFormAPIView
 from .viewsets.silo_calculate_views import PressureFillDataView, PressureDischargeDataView, PressureFillHopperDataView, PressureDischargeHopperDataView, PressureFillAndDischargeHopperDataView
 from .views import *
 
@@ -10,6 +10,7 @@ router.register(r'cb_materials', MaterialComboboxViewSet, basename="cb_materials
 urlpatterns = [
     # Silo hesaplama endpoint'i
     path('api/calculate-silo/', SiloCalculationView.as_view(), name='calculate-silo'),
+    path('api/silo_form/', SiloFormAPIView.as_view(), name='api_silo_form'),
     path("api/fill-pressures/", PressureFillDataView.as_view(), name="pressure-data-fill"),
     path("api/disc-pressures/", PressureDischargeDataView.as_view(), name="pressure-data-discharge"),
     path("api/fill-hopper/", PressureFillHopperDataView.as_view(), name="pressure-data-fill-hopper"),

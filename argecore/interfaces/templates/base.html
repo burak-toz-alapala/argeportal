@@ -39,6 +39,7 @@
     <link href="{% static 'plugins/summernote/summernote-bs4.min.css' %}" rel="stylesheet">
 
     <link href="{% static 'style.css' %}" rel="stylesheet">
+    <link href="{% static 'modal.css' %}" rel="stylesheet">
     <link href="{% static 'navbarstyle.css' %}" rel="stylesheet">
     <link href="{% static 'dist/css/font/font.css' %}" rel="stylesheet">
 
@@ -75,7 +76,9 @@
 
 
 
-
+{% include 'modal.html' %}
+{% block modal %}
+{% endblock %}
 
 
 
@@ -86,6 +89,7 @@
 
 <!-- Bootstrap 4 -->
 <script src="{% static 'plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
 <!-- ChartJS -->
 <script src="{% static 'plugins/chart.js/Chart.min.js' %}"></script>
 <!-- Sparkline -->
@@ -195,8 +199,5 @@ var INSERT = "INSERT";
 {% endblock %}
 
 
-
-
-    {% include 'modal.html' %}
 </body>
 </html>

@@ -1,10 +1,11 @@
 # api/views.py
 from rest_framework.views import APIView
 from rest_framework import viewsets
+from rest_framework import status
 from rest_framework.response import Response
 from domain.models import Material
-from domain.services import SiloCalculator
-from ..serializers.silo_calculate_serializers import SiloCalculationSerializer, MaterialSerializer, MaterialComboboxSerializer
+from domain.services import SiloCalculator, SiloCalculatorC1, SiloCalculatorC2
+from ..serializers.silo_calculate_serializers import SiloCalculationSerializer, MaterialSerializer, MaterialComboboxSerializer, SiloFormSerializer
 from ..serializers.silo_calculate_serializers import PressureDataSerializer, PressureFillHopperDataSerializer, PressureDiscHopperDataSerializer
 
 class SiloCalculationView(APIView):
@@ -70,7 +71,9 @@ class PressureFillDataView(APIView):
         pvf = [row["Pvf"] for row in raw_data]
 
         response = {
-            "z_list": z_list,
+            "x_name": "x (mm)",
+            "y_name": "Pressure (MPa)",
+            "dates": z_list,
             "series": [
                 {"name": "Horizontal pressure Phf", "values": phf},
                 {"name": "Wall friction traction Pwf", "values": pwf},
@@ -106,7 +109,9 @@ class PressureDischargeDataView(APIView):
         pvf = [row["Pvf"] for row in raw_data]
 
         response = {
-            "z_list": z_list,
+            "x_name": "x (mm)",
+            "y_name": "Pressure (MPa)",
+            "dates": z_list,
             "series": [
                 {"name": "Horizontal pressure Phf", "values": phf},
                 {"name": "Wall friction traction Pwf", "values": pwf},
@@ -141,7 +146,9 @@ class PressureFillHopperDataView(APIView):
 
 
         response = {
-            "x_list": x_list,
+            "x_name": "x (mm)",
+            "y_name": "Pressure (MPa)",
+            "dates": x_list,
             "series": [
                 {"name": "Horizontal pressure Pnf", "values": pnf},
                 {"name": "Wall friction traction Ptf", "values": ptf},
@@ -176,7 +183,9 @@ class PressureDischargeHopperDataView(APIView):
 
 
         response = {
-            "x_list": x_list,
+            "x_name": "x (mm)",
+            "y_name": "Pressure (MPa)",
+            "dates": x_list,
             "series": [
                 {"name": "Horizontal pressure Pne", "values": pne},
                 {"name": "Wall friction traction Pt3", "values": pte},
@@ -213,7 +222,9 @@ class PressureFillAndDischargeHopperDataView(APIView):
 
 
         response = {
-            "x_list": x_list,
+            "x_name": "x (mm)",
+            "y_name": "Pressure (MPa)",
+            "dates": x_list,
             "series": [
                 {"name": "Horizontal pressure Pnf", "values": pnf},
                 {"name": "Wall friction traction Ptf", "values": ptf},
@@ -221,3 +232,118 @@ class PressureFillAndDischargeHopperDataView(APIView):
         }
         return Response(response)
     
+class SiloFormAPIView(APIView):
+    def post(self, request):
+        serializer = SiloFormSerializer(data=request.data)
+        if serializer.is_valid():
+            # Veriyi kaydetme işlemi (örnek: DB veya hesaplama)
+            veri = serializer.validated_data
+            material = Material.objects.get(id=veri["particulate"])
+            area = veri["alan"]
+            step = veri ["height_range"]
+            perimeter = veri["cevre"]
+            max_depth = veri["height"]
+            class_type = veri["class_type"]
+            unit_weight = veri["unit_weight"]
+            wall_type = veri["duvar_id"]
+            ef = veri["ef"]
+            e0 = veri["e0"]
+            cop = veri["cop"]
+            dc = veri["dc"]
+            result = calculate_silo_pressures_step(material, area, perimeter, step, max_depth, class_type, unit_weight, wall_type)
+            chart_data = format_silo_pressures_for_chart(result)
+            discharge_chart_data = chart_data
+            if class_type == 1:
+                discharge_chart_data = format_silo_discharge_pressures_c1_for_chart(result, ef, e0, cop, dc)
+            if class_type == 2:
+                discharge_chart_data = format_silo_discharge_pressures_c2_c3_for_chart(result)
+
+            # JSON olarak dön
+            return Response({
+                "status": "success",
+                "chart_data": chart_data,
+                "discharge_chart_data": discharge_chart_data,
+                "hesaplanan_degerler": result
+            })
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+
+def calculate_silo_pressures_step(material, area, perimeter, step, max_depth, class_type, unit_weight, wall_type):
+    """
+    Step artışına göre siloya ait basınç ve sürtünme değerlerini hesaplar.
+    İlk değer 0'dan başlar.
+
+    Args:
+        material: Material nesnesi
+        area: Silo taban alanı
+        perimeter: Silo çevresi
+        step: Derinlik artış miktarı
+        max_depth: Hesaplamanın yapılacağı maksimum derinlik
+
+    Returns:
+        list: Her derinlik için hesaplanan değerlerin dict listesi
+    """
+    if class_type == 1:
+        calculator = SiloCalculatorC1(material, area=area, perimeter=perimeter, unit_weight=unit_weight, wall_type=wall_type)
+    if class_type == 2:
+        calculator = SiloCalculatorC2(material, area=area, perimeter=perimeter, unit_weight=unit_weight, wall_type=wall_type)
+
+    results = []
+
+    z = 0.0  # ilk değer 0
+    while z <= max_depth:
+        result = {
+            'depth': z,
+            'horizontal_pressure': calculator.phf(z),
+            'wall_friction': calculator.pwf(z),
+            'vertical_pressure': calculator.pvf(z),
+
+            # % integer değerler
+            'internal_friction_percent': material.internal_friction_mean,
+            'lateral_pressure_percent': material.lateral_pressure_mean,
+            'wall_friction_percent': material.wall_friction_d1,
+        }
+        results.append(result)
+        z += step  # float step ile de çalışır
+
+    return results
+
+def format_silo_pressures_for_chart(pressure_list, ch=1, cw=1, x_name="z (mm)", y_name="Pressure (MPa)"):
+    """
+    calculate_silo_pressures_step çıktısını z_list + series formatına çevirir.
+    
+    Args:
+        pressure_list: [{'depth': z, 'horizontal_pressure': ..., 'wall_friction': ..., 'vertical_pressure': ...}, ...]
+    
+    Returns:
+        dict: {"z_list": [...], "series": [{"name": ..., "values": [...]}, ...]}
+    """
+    # z değerlerini 1000 ile çarp ve 2 decimal
+    z_list = [round(row['depth'] * 1000, 2) for row in pressure_list]
+    
+    # Katsayılarla çarpılmış değerler
+    phf = [row['horizontal_pressure'] * ch for row in pressure_list]
+    pwf = [row['wall_friction'] * cw for row in pressure_list]
+    pvf = [row['vertical_pressure'] for row in pressure_list]
+
+    response = {
+        "x_name": x_name,
+        "y_name": y_name,
+        "dates": z_list,
+        "series": [
+            {"name": "Horizontal pressure Phf", "values": phf},
+            {"name": "Wall friction traction Pwf", "values": pwf},
+            {"name": "Vertical pressure Pvf", "values": pvf},
+        ]
+    }
+    return response
+
+def format_silo_discharge_pressures_c2_c3_for_chart(pressure_list, ch=1.15, cw=1.10):
+    return format_silo_pressures_for_chart(pressure_list, ch=ch, cw=cw)
+
+def format_silo_discharge_pressures_c1_for_chart(pressure_list, ef, e0, cop, dc):
+    e = max(ef, e0)
+    ch = 1.15 + 1.5*(1 + 0.4 * e / dc) * cop
+    cw = 1.4 * (1 + 0.4 * e / dc)
+    return format_silo_pressures_for_chart(pressure_list, ch=ch, cw=cw)

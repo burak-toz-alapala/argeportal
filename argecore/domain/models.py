@@ -65,3 +65,30 @@ class Material(models.Model):
         if self.lateral_pressure_factor == 0:
             return 0
         return round(self.lateral_pressure_mean / (self.lateral_pressure_factor / 100))
+    
+    
+    def get_wall_friction(self, duvar_id: int) -> float:
+        """
+        Girilen duvar_id'ye göre ilgili sürtünme katsayısını döner.
+        Eğer duvar_id geçersizse veya alan yoksa 0 döner.
+        """
+        attr = f"wall_friction_d{duvar_id}"
+        return getattr(self, attr, 0)
+    
+    def get_wall_friction_upper(self, duvar_id: int) -> float:
+        """
+        Girilen duvar_id'ye göre ilgili sürtünme katsayısını döner.
+        Eğer duvar_id geçersizse veya alan yoksa 0 döner.
+        """
+        attr = f"wall_friction_d{duvar_id}"
+        friction = getattr(self, attr, 0)
+        return round(friction * (self.wall_friction_factor / 100))
+    
+    def get_wall_friction_lower(self, duvar_id: int) -> float:
+        """
+        Girilen duvar_id'ye göre ilgili sürtünme katsayısını döner.
+        Eğer duvar_id geçersizse veya alan yoksa 0 döner.
+        """
+        attr = f"wall_friction_d{duvar_id}"
+        friction = getattr(self, attr, 0)
+        return round(friction / (self.wall_friction_factor / 100))

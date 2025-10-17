@@ -1,13 +1,28 @@
 
-    var chartNameList = ['FillPressures'];
-    var colorList = ["#ff5733", "#f39c12", "#9b59b6", "#24e58f", "#00d2ff", "#0077b6", "#182c50"];
+var chartNameList = [''];
+// var colorList = ["#ff5733", "#f39c12", "#9b59b6", "#24e58f", "#00d2ff", "#0077b6", "#182c50"];
+var colorList = [
+    "#1f77b4", // Mavi – Güvenilirlik ve profesyonellik
+    "#ff7f0e", // Turuncu – Dikkat çekicilik ve enerji
+    "#2ca02c", // Yeşil – Büyüme ve denge
+    "#d62728", // Kırmızı – Aciliyet ve uyarı
+    "#9467bd", // Mor – Yaratıcılık ve sofistike
+    "#8c564b", // Kahverengi – Güven ve topraklama
+    "#e377c2", // Pembe – Yumuşaklık ve feminenlik
+    "#7f7f7f", // Gri – Nötr ve profesyonel
+    "#bcbd22", // Sarı-yeşil – Yenilik ve dikkat
+    "#17becf", // Açık mavi – Teknoloji ve tazelik
+    "#ffbb78", // Açık turuncu – İletişim ve sıcaklık
+    "#c5b0d5"  // Soluk mor – Zarif ve sakin
+];
 
-    // Kullanılmış renkleri takip etmek için bir Set
-    var usedColors = new Set();
 
-  
-  // Kullanılmayan rastgele bir renk seçen fonksiyon
-  function getRandomColor() {
+// Kullanılmış renkleri takip etmek için bir Set
+var usedColors = new Set();
+
+
+// Kullanılmayan rastgele bir renk seçen fonksiyon
+function getRandomColor() {
     if (usedColors.size >= colorList.length) {
         usedColors.clear(); // Tüm renkler kullanıldıysa sıfırla
     }
@@ -33,7 +48,7 @@ function fetchChartData(url, chartKey, chartName, root_url) {
         success: function (response) {
             // const data = JSON.parse(response);
             const data = response;
-            const option = createChartOption(data.dates, data.series, chartTitles[chartKey]);
+            const option = createChartOption(data.dates, data.series, chartTitles[chartKey], data.x_name, data.y_name);
             chartInstances[chartKey].setOption(option);
             document.getElementById("loading" + chartName).style.display = "none"; // Yüklenme çubuğunu gizle
             document.getElementById("lineChart" + chartName).style.display = "block"; // Grafiği göster
@@ -47,7 +62,7 @@ function fetchChartData(url, chartKey, chartName, root_url) {
 }
 
 // Generate ECharts option object
-function createChartOption(dates, seriesData, titleText) {
+function createChartOption(dates, seriesData, titleText, x_name, y_name) {
     const mediaQuery = window.matchMedia('(min-width: 768px) and (max-width: 991.98px)');
     const titleTop = mediaQuery.matches ? '10%' : '5%'; // Dinamik top değeri
     const legendTop = mediaQuery.matches ? '15%' : '1%'; // Dinamik legend top değeri
@@ -96,18 +111,38 @@ function createChartOption(dates, seriesData, titleText) {
             pageButtonItemGap: 5, // Kaydırma düğmeleri arası boşluk
             pageButtonGap: 5, // Sayfa düğmeleri ile içerik arası boşluk
         },
-        xAxis: { type: 'category', data: dates },
-        yAxis: { 
-            type: 'value', 
+        xAxis: {
+            type: 'category',
+            data: dates,
+            name: x_name,
+            nameLocation: 'middle', // ortada olacak
+            nameGap: 30,            // eksenden aşağıdaki boşluk
+            nameTextStyle: {
+                fontWeight: 'bold',   // kalın yazı
+                fontSize: 14,         // yazı boyutu
+                align: 'center'
+            }
+        },
+        yAxis: {
+            type: 'value',
             interval: 0.005,
+            name: y_name,
+            nameLocation: 'middle', // dikeyde ortada olacak
+            nameGap: 50,            // eksenden boşluk
+            nameRotate: 90,         // dikey eksende düzgün görünmesi için
+            nameTextStyle: {
+                fontWeight: 'bold',
+                fontSize: 14,
+                align: 'center'
+            },
             axisLabel: {
-                // margin: 20 // Y eksenindeki yazılar için kenar boşluğu
+                // margin: 20, // Y eksenindeki yazılar için kenar boşluğu
                 formatter: function (value) {
                     // value: Eksenin sayısal değeri
                     return value.toFixed(3); // Sayıyı virgülden sonra 4 basamaklı gösterir
                 }
             }
-         },
+        },
         series: seriesData.map(serie => ({
             name: serie.name,
             data: serie.values,
@@ -206,6 +241,25 @@ function getDateById(inputId) {
 
 function getChartData(url, chartKey, chartName, root_url) {
     fetchChartData(url, chartKey, chartName, root_url);
+}
+
+// Direkt data ile grafiği oluştur
+function renderChartData(data, chartKey, chartName) {
+    document.getElementById("loading" + chartName).style.display = "grid"; // Yüklenme çubuğunu göster
+    document.getElementById("lineChart" + chartName).style.display = "none"; // Grafiği gizle
+
+    try {
+        const option = createChartOption(data.dates, data.series, chartTitles[chartKey], data.x_name, data.y_name);
+        chartInstances[chartKey].setOption(option);
+
+        document.getElementById("loading" + chartName).style.display = "none"; // Yüklenme çubuğunu gizle
+        document.getElementById("lineChart" + chartName).style.display = "block"; // Grafiği göster
+
+        updateAllChartsForMediaQuery(option, chartKey);
+    } catch (err) {
+        console.error("Chart render error:", err);
+        alert("Grafik oluşturulamadı.");
+    }
 }
 
 
