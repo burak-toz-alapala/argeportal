@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -26,7 +27,7 @@ SECRET_KEY = 'django-insecure-ghbotq7l@urcg)dq)e6u4s+nr49-g1=qd1c(p&t!$zj9ns_)yh
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -39,11 +40,19 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # DRF
     'rest_framework',
+    'rest_framework.authtoken',
+
+    # JWT & Djoser
+    'rest_framework_simplejwt',
+    'djoser',
+
     'domain',
     'services',
     'infrastructure',
     'interfaces',
+    'users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
@@ -85,15 +94,28 @@ DATABASES = {
     'default': {
         'ENGINE': 'mssql',
         'NAME': 'ARGEPORTAL',
-        'USER': 'sa',
+        'USER': 'djangouser',
         'PASSWORD': '1234',
-        'HOST': '127.0.0.1',  # Use the IP address of your SQL Server
+        'HOST': '192.168.2.239',  # Use the IP address of your SQL Server
         'PORT': '1433',  # Default port for SQL Server
         'OPTIONS': {
             'driver': 'ODBC Driver 17 for SQL Server',
         },
     }
 }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'mssql',
+#         'NAME': 'ARGEPORTAL',
+#         'USER': 'sa',
+#         'PASSWORD': '1234',
+#         'HOST': '127.0.0.1',  # Use the IP address of your SQL Server
+#         'PORT': '1433',  # Default port for SQL Server
+#         'OPTIONS': {
+#             'driver': 'ODBC Driver 17 for SQL Server',
+#         },
+#     }
+# }
 
 
 # Password validation
@@ -114,6 +136,49 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Basit DRF ayarları
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+    # Varsayılan tüm endpoint'ler korumalı olsun. Public endpointlerde AllowAny kullan.
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+
+# SimpleJWT ayarları (token süreleri vb.)
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),   # access token süresi
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),      # refresh token süresi
+    'AUTH_HEADER_TYPES': ('Bearer',),                 # Authorization: Bearer <token>
+}
+
+
+# ---------------------------
+# Djoser ayarları
+# ---------------------------
+DJOSER = {
+    "USER_ID_FIELD": "id",
+    "LOGIN_FIELD": "email",  # login için email kullanılacak
+    "USER_CREATE_PASSWORD_RETYPE": True,
+    "SERIALIZERS": {
+        "user_create": "users.serializers.UserRegisterSerializer",  # custom serializer
+        "user": "users.serializers.UserSerializer",
+        "current_user": "users.serializers.UserSerializer",
+    },
+    "PERMISSIONS": {
+        "user": ["rest_framework.permissions.IsAuthenticated"],
+        "user_list": ["rest_framework.permissions.IsAdminUser"],
+    },
+    "TOKEN_MODEL": None,  # JWT kullanacağız, default token kullanılmayacak
+    "SEND_ACTIVATION_EMAIL": False,  # email aktivasyon aç/kapa
+    "PASSWORD_RESET_CONFIRM_URL": "password/reset/confirm/{uid}/{token}",
+    "ACTIVATION_URL": "activate/{uid}/{token}",
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
@@ -142,3 +207,13 @@ STATICFILES_DIRS = (
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.office365.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = 'burak.toz@alapala.com'
+EMAIL_HOST_PASSWORD = 'fcyvxvptpdrszdqq'      # MFA açıksa App Password kullan
+DEFAULT_FROM_EMAIL = 'burak.toz@alapala.com'
+
+

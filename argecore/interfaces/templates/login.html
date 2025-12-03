@@ -1,0 +1,164 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARGE Portalı Giriş</title>
+
+  <style>
+    /* === ARKA PLAN STİLLERİ (Önceki Adımdan) === */
+    body {
+      /* Statik dosya yolunu kendi projenize göre güncellemeyi unutmayın! */
+      background-image: url("{% static 'dist/img//background.png' %}");
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      min-height: 100vh;
+      margin: 0;
+      background-position: center center;
+
+      /* Login alanını ortalamak için Flexbox kullanıyoruz */
+      display: flex;
+      justify-content: center;
+      /* Yatayda ortala */
+      align-items: center;
+      /* Dikeyde ortala */
+    }
+
+    /* === LOGIN ALANI STİLLERİ === */
+    .login-container {
+      /* Arka planı yarı saydam bir kutu yapar */
+      /* background-color: rgb(10, 48, 88, 0.5);  */
+
+      border: 2px solid rgba(0, 191, 255, 0.6);
+      /* Hafif mavi kenarlık */
+      border-radius: 25px;
+      /* Köşeleri yuvarlatır */
+
+      /* Gri-maviimsi ve yarı saydam arka plan */
+      background-color: rgba(70, 80, 100, 0.4);
+
+      /* Kutunun içeriğine boşluk ekler */
+      padding: 40px;
+
+      /* Kutunun genişliğini ayarlar */
+      width: 350px;
+
+      /* Metin rengini beyaz yapar */
+      color: white;
+
+      /* Hafif bir gölge ekler (isteğe bağlı) */
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+
+      /* İçeriğin ortalanması için */
+      text-align: center;
+
+
+    }
+
+    .login-container h2 {
+      margin-bottom: 25px;
+      font-size: 24px;
+      color: #4dc2ff;
+      /* Teknoloji mavisi tonu */
+    }
+
+    /* Giriş alanları (input) için temel stil */
+    .login-container input[type="text"],
+    .login-container input[type="password"] {
+      width: 100%;
+      padding: 12px 15px;
+      margin-bottom: 15px;
+      border: none;
+      border-radius: 5px;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+      box-sizing: border-box;
+      /* Padding'i kutu içine dahil eder */
+    }
+
+    /* Placeholder metin rengini ayarlar */
+    .login-container input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Giriş Butonu Stili */
+    .login-container button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      background-color: #4dc2ff;
+      /* Teknoloji mavisi */
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .login-container button:hover {
+      background-color: #2e9fdd;
+      /* Hover rengi */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-container">
+    <h2>ARGE PORTAL GİRİŞİ</h2>
+
+    <form id="loginForm" method="post" action="/login/">
+      {% csrf_token %}
+      <input type="text" name="email" placeholder="E-Mail" required>
+      <input type="password" name="password" placeholder="Şifre" required>
+
+      <button type="submit">GİRİŞ YAP</button>
+    </form>
+  </div>
+</body>
+<!-- jQuery -->
+<script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
+<script>
+  $(document).ready(function () {
+
+    $("#loginForm").submit(function (e) {
+      e.preventDefault(); // Formun normal submit olmasını engelle
+
+      let email = document.forms['loginForm']['email'].value;
+      let password = document.forms['loginForm']['password'].value;
+      let csrftoken = document.forms['loginForm']['csrfmiddlewaretoken'].value;
+
+      $.ajax({
+        url: "/login/",
+        method: "POST",
+        contentType: "application/json",
+        headers: { 'X-CSRFToken': csrftoken },
+        data: JSON.stringify({
+          email: email,
+          password: password
+        }),
+        success: function (response) {
+          // Login başarılı ise home sayfasına yönlendir
+          // Token'ları sessionStorage'a kaydet
+          sessionStorage.setItem("access", response.access);
+          sessionStorage.setItem("refresh", response.refresh);
+          // URL'den next parametresini oku
+          const params = new URLSearchParams(window.location.search);
+          const nextUrl = params.get("next") || "/";
+
+          // Yönlendir
+          window.location.href = nextUrl;
+        },
+        error: function (xhr) {
+          alert("Giriş başarısız! Email veya şifre hatalı.");
+        }
+      });
+
+    });
+
+  });
+</script>
+
+</html>

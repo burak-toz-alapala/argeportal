@@ -979,6 +979,8 @@
         success: function (response) {
           renderChartData(response.chart_data, 'fillPressures', 'FillPressures');
           renderChartData(response.discharge_chart_data, 'discPressures', 'DiscPressures');
+          renderChartData(response.fill_chart_data_hopper, 'fillHopperPressures', 'FillHopperPressures');
+          renderChartData(response.discharge_chart_data_hopper, 'discHopperPressures', 'DiscHopperPressures');
           $('#classModal').modal('hide');
         },
         error: function (xhr, status, error) {

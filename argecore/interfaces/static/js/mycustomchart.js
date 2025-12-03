@@ -48,7 +48,7 @@ function fetchChartData(url, chartKey, chartName, root_url) {
         success: function (response) {
             // const data = JSON.parse(response);
             const data = response;
-            const option = createChartOption(data.dates, data.series, chartTitles[chartKey], data.x_name, data.y_name);
+            const option = createChartOption(data.dates, data.series, chartTitles[chartKey], data.x_name, data.y_name, y_interval=null);
             chartInstances[chartKey].setOption(option);
             document.getElementById("loading" + chartName).style.display = "none"; // Yüklenme çubuğunu gizle
             document.getElementById("lineChart" + chartName).style.display = "block"; // Grafiği göster
@@ -62,92 +62,89 @@ function fetchChartData(url, chartKey, chartName, root_url) {
 }
 
 // Generate ECharts option object
-function createChartOption(dates, seriesData, titleText, x_name, y_name) {
+function createChartOption(dates, seriesData, titleText, x_name, y_name, y_interval=0.005) {
     const mediaQuery = window.matchMedia('(min-width: 768px) and (max-width: 991.98px)');
     const titleTop = mediaQuery.matches ? '10%' : '5%'; // Dinamik top değeri
     const legendTop = mediaQuery.matches ? '15%' : '1%'; // Dinamik legend top değeri
+
+       // Önce ortak yapı
+    const yAxisConfig = {
+        type: 'value',
+        name: y_name,
+        nameLocation: 'middle',
+        nameGap: 50,
+        nameRotate: 90,
+        nameTextStyle: {
+            fontWeight: 'bold',
+            fontSize: 14,
+            align: 'center'
+        },
+        axisLabel: {
+            formatter: function (value) {
+                return value.toFixed(3);
+            }
+        }
+    };
+
+    // Eğer y_interval null değilse ekle
+    if (y_interval !== null) {
+        yAxisConfig.interval = y_interval;
+    }
 
     return {
         title: {
             text: titleText,
             top: '10%',
             left: 'center',
-            // padding: [10, 20, 20, 20],
             textStyle: { fontSize: 18 }
         },
         grid: {
-            top: '20%', // Grafik ile başlık arasındaki boşluğu ayarlamak için grafiğin üst kısmındaki boşluğu artırıyoruz
+            top: '20%',
             left: '5%',
             right: '5%',
-            bottom: '5%',
+            bottom: '8%',
             containLabel: true
         },
         toolbox: {
             right: 10,
             feature: {
-                dataZoom: {
-                    yAxisIndex: 'none'
-                },
+                dataZoom: { yAxisIndex: 'none' },
                 restore: {},
                 saveAsImage: {}
             }
         },
-        dataZoom: [
-
-            {
-                type: 'inside'
-            }
-        ],
+        dataZoom: [{ type: 'inside' }],
         tooltip: { trigger: 'axis' },
         legend: {
             top: '0%',
-            data: seriesData.map(serie => serie.name),
-            type: 'scroll', // Kaydırılabilir tür
-            orient: 'horizontal', // Yatay yön
+            data: seriesData.map(s => s.name),
+            type: 'scroll',
+            orient: 'horizontal',
             left: 'center',
             align: 'auto',
-            itemWidth: 20, // İkon genişliği
-            itemHeight: 14, // İkon yüksekliği
-            pageButtonItemGap: 5, // Kaydırma düğmeleri arası boşluk
-            pageButtonGap: 5, // Sayfa düğmeleri ile içerik arası boşluk
+            itemWidth: 20,
+            itemHeight: 14,
+            pageButtonItemGap: 5,
+            pageButtonGap: 5,
         },
         xAxis: {
             type: 'category',
             data: dates,
             name: x_name,
-            nameLocation: 'middle', // ortada olacak
-            nameGap: 30,            // eksenden aşağıdaki boşluk
-            nameTextStyle: {
-                fontWeight: 'bold',   // kalın yazı
-                fontSize: 14,         // yazı boyutu
-                align: 'center'
-            }
-        },
-        yAxis: {
-            type: 'value',
-            interval: 0.005,
-            name: y_name,
-            nameLocation: 'middle', // dikeyde ortada olacak
-            nameGap: 50,            // eksenden boşluk
-            nameRotate: 90,         // dikey eksende düzgün görünmesi için
+            nameLocation: 'middle',
+            nameGap: 30,
             nameTextStyle: {
                 fontWeight: 'bold',
                 fontSize: 14,
                 align: 'center'
-            },
-            axisLabel: {
-                // margin: 20, // Y eksenindeki yazılar için kenar boşluğu
-                formatter: function (value) {
-                    // value: Eksenin sayısal değeri
-                    return value.toFixed(3); // Sayıyı virgülden sonra 4 basamaklı gösterir
-                }
             }
         },
+        yAxis: yAxisConfig,
         series: seriesData.map(serie => ({
             name: serie.name,
             data: serie.values,
             type: 'line',
-            color: getRandomColor() // Her seriye farklı bir renk atanıyor
+            color: getRandomColor()
         }))
     };
 }

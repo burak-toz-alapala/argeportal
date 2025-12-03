@@ -1,471 +1,1383 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="tr">
+{% block cssList %}
+{{ block.super }}
+<!-- KaTeX CSS + JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.2/dist/katex.min.css">
+<style>
+  .shape-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 350px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background: #f8f9fa;
+    padding: 10px;
+    text-align: center;
+  }
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dinamik Combobox Hesaplama</title>
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    .shape-preview {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 350px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      background: #f8f9fa;
-      padding: 10px;
-      text-align: center;
+  .shape-preview img {
+    max-width: 150px;
+    max-height: 150px;
+    object-fit: contain;
+    margin-bottom: 10px;
+  }
+
+  .combobox-list {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .combobox-list li {
+    cursor: pointer;
+  }
+
+  /* Ortala */
+  .row-chart {
+    position: relative;
+    /* Yüklenme çubuğunun ortalanabilmesi için gerekli */
+    height: 500px;
+    /* Grafik alanının yüksekliği */
+    margin-bottom: 20px;
+
+  }
+
+  /* Yüklenme animasyonu */
+  .loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 500px;
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 10;
+  }
+
+  .spinner {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #3498db;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+  }
+
+  .col-pict-h {
+    height: 500px !important;
+  }
+
+  .mychart_css {
+    /* width: 90%; */
+    height: 500px;
+    padding-top: 15px;
+  }
+
+  .mysekil_css {
+    width: 100%;
+    /* genişliği tamamen doldur */
+    height: 100%;
+    /* yüksekliği tamamen doldur */
+    object-fit: contain;
+    /* resmi kesmeden sığdır */
+    padding-top: 15px;
+  }
+
+  .form-card {
+    padding: 20px;
+    height: 100%;
+  }
+
+  .is-invalid {
+    border: 2px solid #dc3545 !important;
+    background-color: #fff5f5;
+  }
+
+  #showFuncModal .modal-dialog {
+    width: 70%;
+  }
+
+  #showFuncModal .modal-dialog {
+    max-width: 70% !important;
+  }
+
+  #classModal .modal-dialog {
+    width: 80%;
+  }
+
+  #classDetailModal .modal-dialog {
+    max-width: 80% !important;
+  }
+
+  .formula {
+    font-size: 1rem;
+    /* büyüt */
+    font-weight: 900;
+    /* kalın */
+    padding: 1rem;
+    border-radius: 8px;
+    background: #fafafa;
+    display: inline-block;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
     }
 
-    .shape-preview img {
-      max-width: 150px;
-      max-height: 150px;
-      object-fit: contain;
-      margin-bottom: 10px;
+    100% {
+      transform: rotate(360deg);
     }
+  }
+</style>
+{% endblock %}
 
-    .combobox-list {
-      max-height: 200px;
-      overflow-y: auto;
-    }
-
-    .combobox-list li {
-      cursor: pointer;
-    }
-
-        /* Ortala */
-    .row-chart {
-        position: relative;
-        /* Yüklenme çubuğunun ortalanabilmesi için gerekli */
-        height: 500px;
-        /* Grafik alanının yüksekliği */
-    }
-
-        /* Yüklenme animasyonu */
-    .loading-spinner {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        height: 500px;
-        position: absolute;
-        background-color: rgba(255, 255, 255, 0.8);
-        z-index: 10;
-    }
-
-    .spinner {
-        border: 8px solid #f3f3f3;
-        border-top: 8px solid #3498db;
-        border-radius: 50%;
-        width: 60px;
-        height: 60px;
-        animation: spin 1s linear infinite;
-    }
-
-    .mychart_css {
-        width: 90%;
-        height: 500px;
-    }
-
-    @keyframes spin {
-        0% {
-            transform: rotate(0deg);
-        }
-
-        100% {
-            transform: rotate(360deg);
-        }
-    }
-
-  </style>
-</head>
-
-<body class="p-4">
-
-  <div class="">
+{% block content %}
+<div class="row">
+  <!-- Sol taraf: Combobox + inputlar -->
+  <div class="col-md-3">
     <div class="row">
-      <!-- Sol taraf: Combobox + inputlar -->
-      <div class="col-md-2">
-      <img src="{% get_media_prefix %}images/sekil_2.png" style="width: 100%;" alt="geometry">
+      <div class="col">
+        <img src="{% static 'dist/img/sekil_1.png' %}" style="width: 100%;" alt="geometry">
       </div>
-      <div class="col-md-6">
-        <form id="silo_calculate">
-          <h4 class="text-center">Şekil Seçimi</h4>
-          <div class="row">
-            <div class="col-6">
-              <div class="mb-3">
-                <label for="particulate" class="form-label">Ürün</label>
-                <select id="particulate" class="form-select" onchange="cb_particulate()">
-                  <option value="">Yükleniyor...</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label for="height" class="form-label">Yükseklik (hc mm)</label>
-                <input type="number" class="form-control calc-input" id="height" placeholder="Yüksekliği giriniz">
-              </div>
-              <div class="mb-3">
-                <label for="height_konik" class="form-label">Konik Yükseklik (hh mm)</label>
-                <input type="number" class="form-control calc-input" id="height_konik" placeholder="Yüksekliği giriniz">
-              </div>
-              <div class="mb-3">
-                <label for="degress" class="form-label">Açı (ß)</label>
-                <input type="number" class="form-control calc-input" id="degress" placeholder="Açıyı giriniz">
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="dropdown mb-3">
-                <label for="comboInput" class="form-label">Şekil</label>
-                <input type="text" id="comboInput" class="form-control" placeholder="Seç veya yaz...">
-                <ul class="dropdown-menu combobox-list w-100" id="comboList">
-                  <li class="dropdown-item">Kare</li>
-                  <li class="dropdown-item">Dikdörtgen</li>
-                  <li class="dropdown-item">Daire</li>
-                  <li class="dropdown-item">Diğer</li>
-                </ul>
-              </div>
-              <!-- Dinamik alanlar -->
-              <div id="dynamicFields"></div>
-              <div class="mb-3">
-                <label for="height_range" class="form-label">Yükseklik adım aralığı (mm)</label>
-                <input type="number" class="form-control calc-input" id="height_range" placeholder="Aralık giriniz">
-              </div>
-
-              <div class="mb-3">
-                <label for="height_range_konik" class="form-label">Konik adım aralığı (mm)</label>
-                <input type="number" class="form-control calc-input" id="height_range_konik" placeholder="Aralık giriniz">
-              </div>
-            </div>
-          </div>  
-
-          <!-- <input type="hidden" name="tabloId_MACK" id="tabloId_FKLM" value=""> -->
-          <!-- <input type="hidden" name="action_MACK" id="action_FKLM" value=""> -->
-        </form>
-        
-      </div>
-
-      <!-- Sağ taraf: Resim önizleme + hesap sonuçları -->
-      <div class="col-md-4">
-        <div class="row">
-          <h4 class="text-center">Seçilen Şekil</h4>
-          <img src="{% get_media_prefix %}images/sekil_5.png" style="width: 100%;" alt="geometry_1">
-          <div id="shapePreview"></div>
-        </div>
-        
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-md-4">
-        <div class="row row-chart p-2">
-            <!-- Yüklenme çubuğu -->
-            <div id="loadingFillPressures" class="loading-spinner" style="display: none;">
-                <div class="spinner"></div>
-                <p>Yükleniyor...</p>
-            </div>
-            <div id="lineChartFillPressures" class="mychart_css"></div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="row row-chart p-2">
-            <!-- Yüklenme çubuğu -->
-            <div id="loadingDiscPressures" class="loading-spinner" style="display: none;">
-                <div class="spinner"></div>
-                <p>Yükleniyor...</p>
-            </div>
-            <div id="lineChartDiscPressures" class="mychart_css"></div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="row row-chart p-2">
-            <!-- Yüklenme çubuğu -->
-            <div id="loadingFillHopperPressures" class="loading-spinner" style="display: none;">
-                <div class="spinner"></div>
-                <p>Yükleniyor...</p>
-            </div>
-            <div id="lineChartFillHopperPressures" class="mychart_css"></div>
-        </div>
-      </div>
-
-    </div>
-    <div class="row">
-      <div class="col-md-4">
-        <div class="row row-chart p-2">
-            <!-- Yüklenme çubuğu -->
-            <div id="loadingDiscHopperPressures" class="loading-spinner" style="display: none;">
-                <div class="spinner"></div>
-                <p>Yükleniyor...</p>
-            </div>
-            <div id="lineChartDiscHopperPressures" class="mychart_css"></div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="row row-chart p-2">
-            <!-- Yüklenme çubuğu -->
-            <div id="loadingFillDiscHopperPressures" class="loading-spinner" style="display: none;">
-                <div class="spinner"></div>
-                <p>Yükleniyor...</p>
-            </div>
-            <div id="lineChartFillDiscHopperPressures" class="mychart_css"></div>
-        </div>
+      <div class="col">
+        <img src="{% static 'dist/img/sekil_2.png' %}" style="width: 100%;" alt="geometry_2">
       </div>
     </div>
   </div>
+  <div class="col-md-6">
+    <form id="silo_calculate" class="form-card card p-3">
+      <h4 class="text-center mb-3">Şekil Seçimi</h4>
+      <div class="row">
+        <div class="col-md-6 col-sm-12">
+          <!-- Ürün -->
+          <div class="row mb-3 align-items-center">
+            <label for="particulate" class="col-sm-4 col-form-label">Ürün</label>
+            <div class="col-sm-8">
+              <select id="particulate" class="form-select" onchange="cb_particulate()">
+                <option value="">Yükleniyor...</option>
+              </select>
+            </div>
+          </div>
+          <!-- Yoğunluk -->
+          <div class="row mb-3 align-items-center">
+            <label for="unit_weight" class="col-sm-4 col-form-label">Yoğunluk (kg/m3)</label>
+            <div class="col-sm-8">
+              <input type="number" class="form-control calc-input" id="unit_weight" placeholder="Yoğunluğu giriniz">
+            </div>
+          </div>
+          <!-- Yoğunluk -->
+          <div class="row mb-3 align-items-center">
+            <label for="cop" class="col-sm-4 col-form-label">C<small class="small-custom">op</small></label>
+            <div class="col-sm-8">
+              <input type="number" class="form-control calc-input" id="cop" placeholder="Cop giriniz">
+            </div>
+          </div>
+          <!-- Yükseklik -->
+          <div class="row mb-3 align-items-center">
+            <label for="height" class="col-sm-4 col-form-label">Yükseklik (h<small class="small-custom">c</small>
+              mm)</label>
+            <div class="col-sm-8">
+              <input type="number" class="form-control calc-input" id="height" placeholder="Yüksekliği giriniz">
+            </div>
+          </div>
+          <!-- Konik Yükseklik -->
+          <div class="row mb-3 align-items-center">
+            <label for="height_konik" class="col-sm-4 col-form-label">Konik Yükseklik (h<small
+                class="small-custom">h</small> mm)</label>
+            <div class="col-sm-8">
+              <input type="number" class="form-control calc-input" id="height_konik" placeholder="Yüksekliği giriniz">
+            </div>
+          </div>
+          <!-- Açı -->
+          <div class="row mb-3 align-items-center">
+            <label for="degress" class="col-sm-4 col-form-label">Açı (ß)</label>
+            <div class="col-sm-8">
+              <input type="number" class="form-control calc-input" id="degress" placeholder="Açıyı giriniz">
+            </div>
+          </div>
+          <!-- et -->
+          <div class="row mb-3 align-items-center d-none">
+            <label for="et" class="col-sm-4 col-form-label">e<small class="small-custom">t</small> (mm)</label>
+            <div class="col-sm-8">
+              <input type="hidden" class="form-control calc-input" id="et" placeholder="Lütfen giriniz" value="0">
+            </div>
+          </div>
+          <!-- ef -->
+          <div class="row mb-3 align-items-center">
+            <label for="ef" class="col-sm-4 col-form-label">e<small class="small-custom">f</small> (mm)</label>
+            <div class="col-sm-8">
+              <input type="number" class="form-control calc-input" id="ef" placeholder="Lütfen  giriniz" value="0">
+            </div>
+          </div>
+          <!-- e0 -->
+          <div class="row mb-3 align-items-center">
+            <label for="e0" class="col-sm-4 col-form-label">e<small class="small-custom">0</small> (mm)</label>
+            <div class="col-sm-8">
+              <input type="number" class="form-control calc-input" id="e0" placeholder="Lütfen  giriniz" value="0">
+            </div>
+          </div>
+        </div>
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- jQuery dahil et (CDN veya static) -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="{% static 'js/echarts.min.js' %}"></script>
-  <script src="{% static 'js/mycustomchart.js' %}"></script>
+        <div class="col-md-6 col-sm-12">
+          <!-- Şekil Combobox -->
+          <div class="row mb-3 align-items-center dropdown">
+
+            <label for="sekil" class="col-sm-4 col-form-label">Şekil</label>
+            <div class="col-sm-8">
+              <input type="text" id="sekil" class="form-control" placeholder="Seç veya yaz...">
+              <input type="hidden" id="sekil_id" name="sekil_id">
+              <ul class="dropdown-menu combobox-list w-100" id="sekilList">
+                <li class="dropdown-item" data-id="1">Kare</li>
+                <li class="dropdown-item" data-id="2">Dikdörtgen</li>
+                <li class="dropdown-item" data-id="3">Daire</li>
+                <li class="dropdown-item" data-id="4">Diğer</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Dinamik Alanlar -->
+          <div id="dynamicFields"></div>
+
+          <!-- Yükseklik Aralığı -->
+          <div class="row mb-3 align-items-center">
+            <label for="height_range" class="col-sm-4 col-form-label">Yükseklik adım aralığı (mm)</label>
+            <div class="col-sm-8">
+              <input type="number" class="form-control calc-input" id="height_range" placeholder="Aralık giriniz">
+            </div>
+          </div>
+
+          <!-- Konik Aralığı -->
+          <div class="row mb-3 align-items-center">
+            <label for="height_range_konik" class="col-sm-4 col-form-label">Konik adım aralığı (mm)</label>
+            <div class="col-sm-8">
+              <input type="number" class="form-control calc-input" id="height_range_konik" placeholder="Aralık giriniz">
+            </div>
+          </div>
+
+          <!-- Şekil Combobox -->
+          <div class="row mb-3 align-items-center dropdown">
+
+            <label class="col-sm-4 col-form-label" onClick="func_duvar_detail()">Duvar Tipi<sup>*</sup></label>
+            <div class="col-sm-8">
+              <input type="text" id="duvarTipi" class="form-control" placeholder="Seç veya yaz...">
+              <input type="hidden" id="duvar_id" name="duvar_id">
+              <ul class="dropdown-menu combobox-list w-100" id="duvarList">
+                <li class="dropdown-item" data-id="1">D1</li>
+                <li class="dropdown-item" data-id="2">D2</li>
+                <li class="dropdown-item" data-id="3">D3</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <button type="button" class="btn btn-primary" id="btn_form_kaydet" onClick="func_form_kaydet(this)">Kaydet
+        </button>
+      </div>
+    </form>
 
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const comboInput = document.getElementById("comboInput");
-      const comboList = document.getElementById("comboList");
-      const fields = document.getElementById("dynamicFields");
-      const preview = document.getElementById("shapePreview");
+  </div>
 
-      fillComboBox("/api/cb_materials/", "#particulate");
-      fetchAllCharts();
+  <!-- Sağ taraf: Resim önizleme + hesap sonuçları -->
+  <div class="col-md-3">
+    <div class="row">
+      <h4 class="text-center">Seçilen Şekil</h4>
+      <img src="{% static 'dist/img/sekil_5.png' %}" style="width: 100%; height: 100%;" alt="geometry_1">
+      <div id="shapePreview"></div>
+    </div>
 
-      //   // İnternet linkleri
-      //   const images = {
-      //     "Daire": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Circle_and_Square.svg",
-      //     "Kare": "https://upload.wikimedia.org/wikipedia/commons/4/43/Sqr_Geometry.png",
-      //     "Dikdörtgen": "https://upload.wikimedia.org/wikipedia/commons/9/96/Prostokat-rectangle.svg",
-      //     "Diğer": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Question_mark_icon.svg/1200px-Question_mark_icon.svg.png"
-      //   };
-      const images = {
-        "Daire": "{% get_media_prefix %}images/daire.png",
-        "Kare": "{% get_media_prefix %}images/kare.png",
-        "Dikdörtgen": "{% get_media_prefix %}images/dikdortgen.png",
-        "Diğer": "{% get_media_prefix %}images/diger.png"
-      };
-      // Hesaplama fonksiyonu
-      function calculateAndShow(shape) {
-        let alan = null;
-        let cevre = null;
-        var h = parseFloat(document.getElementById("height")?.value);
-        var w = 0;
-        var type = "Squat";
-        if (shape === "Daire") {
-          var cap = parseFloat(document.getElementById("radius")?.value);
-          var r = cap/2
-          if (!isNaN(cap) && cap > 0) {
-            w = cap;
-            alan = Math.PI * r * r * h;
-            cevre = 2 * Math.PI * r;
-          }
-        } else if (shape === "Kare") {
-          var a = parseFloat(document.getElementById("squareSide")?.value);
-          if (!isNaN(a) && a > 0) {
-            w = a;
-            alan = a * a * h;
-            cevre = 4 * a;
-          }
-        } else if (shape === "Dikdörtgen") {
-          var uzun = parseFloat(document.getElementById("rectLong")?.value);
-          var kisa = parseFloat(document.getElementById("rectShort")?.value);
-          if (!isNaN(uzun) && !isNaN(kisa) && uzun > 0 && kisa > 0) {
-            w = kisa;
-            alan = uzun * kisa * h;
-            cevre = 2 * (uzun + kisa);
-          }
-        } else if (shape === "Diğer") {
-          var area = parseFloat(document.getElementById("area")?.value);
-          var perim = parseFloat(document.getElementById("perimeter")?.value);
-          w = parseFloat(document.getElementById("width")?.value);
-          if (!isNaN(area)) alan = area;
-          if (!isNaN(perim)) cevre = perim;
-        }
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-5 mt-3 pt-1 border bg-light bg-gradient">
 
-        if (!isNaN(h) && h > 0) {
-          var tmp_type = h / w;
-          if (tmp_type > 2) {
-            type = "Slender";
-          }
-        }
+    <div class="row mb-2 d-flex flex-row-reverse">
+      <div class="col-1 col-md-1 col-sm-2 px-1 chart-navbar">
+        <button class="btn btn-warning w-100" data-bs-toggle="tooltip" data-bs-placement="top"
+          title="Excel olarak indir" onclick="exportChartCookieData('FillPressures')">
+          <i class="fas fa-arrow-down"></i>
+        </button>
+      </div>
+      <div class="col-1 col-md-1 col-sm-2 px-1 chart-navbar">
+        <button class="btn btn-info w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="Formül göster"
+          onclick="showFunc('siloFill')">
+          <i class="far fa-star"></i>
+        </button>
+      </div>
+    </div>
+    <div class="row row-chart p-2">
+      <!-- Yüklenme çubuğu -->
+      <div id="loadingFillPressures" class="loading-spinner" style="display: none;">
+        <div class="spinner"></div>
+        <p>Yükleniyor...</p>
+      </div>
+      <div id="lineChartFillPressures" class="mychart_css card"></div>
+    </div>
 
-        // Sonuçları göster
-        const resultHtml = `
+  </div>
+  <div class="col-md-5 mt-3 pt-1 border bg-light bg-gradient">
+
+    <div class="row mb-2 d-flex flex-row-reverse">
+      <div class="col-1 col-md-1 col-sm-2 px-1 chart-navbar">
+        <button class="btn btn-warning w-100" data-bs-toggle="tooltip" data-bs-placement="top"
+          title="Excel olarak indir" onclick="exportChartCookieData('DiscPressures')">
+          <i class="fas fa-arrow-down"></i>
+        </button>
+      </div>
+      <div class="col-1 col-md-1 col-sm-2 px-1 chart-navbar">
+        <button class="btn btn-info w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="Formül göster"
+          onclick="showFunc('siloDisc')">
+          <i class="far fa-star"></i>
+        </button>
+      </div>
+    </div>
+    <div class="row row-chart p-2">
+      <!-- Yüklenme çubuğu -->
+      <div id="loadingDiscPressures" class="loading-spinner" style="display: none;">
+        <div class="spinner"></div>
+        <p>Yükleniyor...</p>
+      </div>
+      <div id="lineChartDiscPressures" class="mychart_css card"></div>
+    </div>
+  </div>
+  <div class="col-md-2">
+    <div class="row">
+      <div class="col col-pict-h">
+        <img src="{% static 'dist/img/sekil_3.png' %}" class="mysekil_css" alt="geometry_5">
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-5 mt-3 pt-1 border bg-light bg-gradient">
+
+    <div class="row mb-2 d-flex flex-row-reverse">
+      <div class="col-1 col-md-1 col-sm-2 px-1 chart-navbar">
+        <button class="btn btn-warning w-100" data-bs-toggle="tooltip" data-bs-placement="top"
+          title="Excel olarak indir" onclick="exportChartCookieData('FillHopperPressures')">
+          <i class="fas fa-arrow-down"></i>
+        </button>
+      </div>
+      <div class="col-1 col-md-1 col-sm-2 px-1 chart-navbar">
+        <button class="btn btn-info w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="Formül göster"
+          onclick="showFunc('hopperFill')">
+          <i class="far fa-star"></i>
+        </button>
+      </div>
+    </div>
+    <div class="row row-chart p-2">
+      <!-- Yüklenme çubuğu -->
+      <div id="loadingFillHopperPressures" class="loading-spinner" style="display: none;">
+        <div class="spinner"></div>
+        <p>Yükleniyor...</p>
+      </div>
+      <div id="lineChartFillHopperPressures" class="mychart_css card"></div>
+    </div>
+  </div>
+  <div class="col-md-5 mt-3 pt-1 border bg-light bg-gradient">
+
+    <div class="row mb-2 d-flex flex-row-reverse">
+      <div class="col-1 col-md-1 col-sm-2 px-1 chart-navbar">
+        <button class="btn btn-warning w-100" data-bs-toggle="tooltip" data-bs-placement="top"
+          title="Excel olarak indir" onclick="exportChartCookieData('DiscHopperPressures')">
+          <i class="fas fa-arrow-down"></i>
+        </button>
+      </div>
+      <div class="col-1 col-md-1 col-sm-2 px-1 chart-navbar">
+        <button class="btn btn-info w-100" data-bs-toggle="tooltip" data-bs-placement="top" title="Formül göster"
+          onclick="showFunc('hopperDisc')">
+          <i class="far fa-star"></i>
+        </button>
+      </div>
+    </div>
+    <div class="row row-chart p-2">
+      <!-- Yüklenme çubuğu -->
+      <div id="loadingDiscHopperPressures" class="loading-spinner" style="display: none;">
+        <div class="spinner"></div>
+        <p>Yükleniyor...</p>
+      </div>
+      <div id="lineChartDiscHopperPressures" class="mychart_css card"></div>
+    </div>
+  </div>
+  <div class="col-md-2">
+    <div class="row">
+      <div class="col col-pict-h">
+        <img src="{% static 'dist/img/sekil_6.png' %}" class="mysekil_css" alt="geometry_6">
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block modal %}
+<!-- Class Modal    ***********************************************************   Class Modal   ***********************************************************  Class Modal     ************************ -->
+<div class="modal" id="classModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title modal-title-color">Class</h5>
+      </div>
+      <div class="modal-body pt-0">
+        <div class="box box-default box-modal">
+          <form id="formClass">
+            <div class="row mb-3 align-items-center">
+              <label for="class_tonaj" class="col-sm-4 col-form-label">Tonaj (ton)</label>
+              <div class="col-sm-8">
+                <input type="number" class="form-control calc-input" id="class_tonaj" disabled>
+              </div>
+            </div>
+            <div class="row mb-3 align-items-center">
+              <label for="class_silo_type" class="col-sm-4 col-form-label">Silo Tipi</label>
+              <div class="col-sm-8">
+                <input type="text" class="form-control calc-input" id="class_silo_type" disabled>
+              </div>
+            </div>
+            <div class="row mb-3 align-items-center">
+              <label class="col-sm-4 col-form-label" onClick="func_class_detail()">Class Tipi<sup>*</sup></label>
+              <div class="col-sm-8">
+                <select class="chosen form-control" name="cb_class" id="cb_class">
+                  <option value="0">Seç</option>
+                  <option value="1">Class 1</option>
+                  <option value="2">Class 2</option>
+                </select>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+        <button type="button" class="btn btn-primary" id="btn_classModal_kaydet"
+          data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Oluştur"
+          onClick="func_classModal_kaydet(this)">Oluştur
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ./Class Modal -->
+
+<!-- Duvar Modal    ***********************************************************   Duvar Modal   ***********************************************************  Duvar Modal     ************************ -->
+<div class="modal" id="duvarDetailModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title modal-title-color">Duvar Yüzeyi Tanımları (Tablo 4.1)</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+      </div>
+      <div class="modal-body pt-0">
+        <div class="box box-default box-modal">
+          <table class="table table-bordered table-sm">
+            <caption style="caption-side: top; text-align: left; font-weight: bold;">Tablo 4.1: Duvar yüzeyi tanımları
+            </caption>
+            <thead>
+              <tr>
+                <th style="width: 10%;">Kategori</th>
+                <th style="width: 30%;">Tanımlayıcı Başlık</th>
+                <th style="width: 60%;">Tipik duvar malzemeleri</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>D1</td>
+                <td>Düşük sürtünmeli "Kaygan" olarak sınıflandırılır</td>
+                <td>
+                  Soğuk haddelenmiş paslanmaz çelik <br>
+                  Cilalı paslanmaz çelik <br>
+                  Düşük sürtünme için tasarlanmış kaplamalı yüzey <br>
+                  Cilalı alüminyum <br>
+                  Ultra yüksek molekül ağırlıklı polietilen<sup>a</sup>
+                </td>
+              </tr>
+              <tr>
+                <td>D2</td>
+                <td>Orta sürtünmeli "Pürüzsüz" olarak sınıflandırılır</td>
+                <td>
+                  Pürüzsüz yumuşak karbon çeliği (kaynaklı veya cıvatalı yapı) <br>
+                  Değirmen bitimli paslanmaz çelik <br>
+                  Galvanizli karbon çeliği <br>
+                  Oksitlenmiş alüminyum <br>
+                  Korozyon direnci veya aşınmaya karşı tasarlanmış kaplamalı yüzey
+                </td>
+              </tr>
+              <tr>
+                <td>D3</td>
+                <td>Yüksek sürtünmeli "Pürüzlü/Tırtıklı" olarak sınıflandırılır</td>
+                <td>
+                  Kalıp beton, çelik bitimli beton veya eskimiş beton <br>
+                  Eskimiş (aşınmış/korozyona uğramış) karbon çeliği <br>
+                  Aşınmaya dayanıklı çelik <br>
+                  Seramik fayanslar
+                </td>
+              </tr>
+              <tr>
+                <td>D4</td>
+                <td>Düzensiz</td>
+                <td>
+                  Yatay oluklu duvarlar <br>
+                  Yatay nervürlü profilli sac <br>
+                  Büyük sapmaları olan standart dışı duvarlar
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="font-size: 0.85em; margin-top: 15px;">
+            <p>
+              <strong>NOT:</strong> Bu tablodaki tanımlayıcı başlıklar, pürüzlülük yerine sürtünme terimleri ile
+              verilmiştir, çünkü kayan taneli bir katı ile yüzey arasındaki ölçülen duvar sürtünmesi ile pürüzlülük
+              ölçümleri arasında zayıf bir korelasyon bulunmaktadır.
+            </p>
+            <p>
+              <sup>a</sup> Parçacıkların yüzeye gömülmesinden kaynaklanan pürüzlenme etkisi, bu yüzeyler için dikkatle
+              değerlendirilmelidir.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="duvarModal_old" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title modal-title-color">Duvar Yüzeyi Tanımları (Table 4.1)</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-0">
+        <div class="box box-default box-modal">
+          <table class="table table-bordered table-sm">
+            <caption style="caption-side: top; text-align: left; font-weight: bold;">Table 4.1: Wall surface definitions
+            </caption>
+            <thead>
+              <tr>
+                <th style="width: 10%;">Category</th>
+                <th style="width: 30%;">Descriptive title</th>
+                <th style="width: 60%;">Typical wall materials</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>D1</td>
+                <td>Low friction classed as "Slippery"</td>
+                <td>
+                  Cold-rolled stainless steel <br>
+                  Polished stainless steel <br>
+                  Coated surface designed for low friction <br>
+                  Polished aluminium <br>
+                  Ultra high molecular weight polyethylene<sup>a</sup>
+                </td>
+              </tr>
+              <tr>
+                <td>D2</td>
+                <td>Moderate friction classed as "Smooth"</td>
+                <td>
+                  Smooth mild carbon steel (welded or bolted construction) <br>
+                  Mill finish stainless steel <br>
+                  Galvanized carbon steel <br>
+                  Oxidized aluminium <br>
+                  Coated surface designed for corrosion resistance or abrasive wear
+                </td>
+              </tr>
+              <tr>
+                <td>D3</td>
+                <td>High friction classed as "Raspy"</td>
+                <td>
+                  Off form concrete, steel finished concrete or aged concrete <br>
+                  Aged (corroded) carbon steel <br>
+                  Abrasion resistant steel <br>
+                  Ceramic tiles
+                </td>
+              </tr>
+              <tr>
+                <td>D4</td>
+                <td>Irregular</td>
+                <td>
+                  Horizontally corrugated walls <br>
+                  Profiled sheeting with horizontal ribs <br>
+                  Non-standard walls with large aberrations
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="font-size: 0.85em; margin-top: 15px;">
+            <p>
+              <strong>NOTE:</strong> The descriptive titles in this table are given in terms of friction rather than
+              roughness because there is a poor correlation between measured wall friction between a sliding granular
+              solid and the surface and measures of roughness.
+            </p>
+            <p>
+              <sup>a</sup> The roughening effect of particles being impressed into the surface should be considered
+              carefully for these surfaces.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ./Duvar Modal -->
+
+
+<div class="modal" id="classDetailModal" tabindex="-1" role="dialog" aria-labelledby="siloModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title modal-title-color" id="siloModalLabel">Eylem Değerlendirmeleri İçin Önerilen Silo
+          Sınıflandırması (Tablo 2.1)</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+      </div>
+      <div class="modal-body pt-0">
+        <div class="box box-default box-modal">
+          <table class="table table-bordered table-sm">
+            <caption style="caption-side: top; text-align: left; font-weight: bold;">Tablo 2.1: Eylem değerlendirmeleri
+              için önerilen silo sınıflandırması</caption>
+            <thead>
+              <tr>
+                <th style="width: 35%;">Eylem Değerlendirme Sınıfı</th>
+                <th style="width: 65%;">Tanım</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Eylem Değerlendirme Class 3</td>
+                <td>
+                  Kapasitesi 10 000 tonu aşan silolar <br>
+                  Aşağıdaki tasarım durumlarından herhangi birinin meydana geldiği, kapasitesi 1000 tonu aşan silolar:
+                  <br>
+                  a) e<small>0</small>/d<small>0</small> > 0.25 olan eksantrik (merkez dışı) boşaltma (bkz. şekil 1.1b)
+                  <br>
+                  b) e<small>t</small>/d<small>0</small> > 0.25 üst yüzey eksantrisitesine sahip basık (squat) silolar
+                </td>
+              </tr>
+              <tr>
+                <td>Eylem Değerlendirme Class 2</td>
+                <td>
+                  Bu standart kapsamına giren ve başka bir sınıfa yerleştirilmemiş tüm silolar
+                </td>
+              </tr>
+              <tr>
+                <td>Eylem Değerlendirme Class 1</td>
+                <td>
+                  Kapasitesi 100 tonun altında olan silolar
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal" id="showFuncModal" tabindex="-1" role="dialog" aria-labelledby="siloModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title modal-title-color" id="siloModalLabel">Fonksiyon</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+      </div>
+      <div class="modal-body pt-0">
+        <div class="box box-default box-modal">
+
+          <div id="formulaDiv_silo_fill" class="formula"></div>
+          <div id="formulaDiv_silo_disc" class="formula"></div>
+          <div id="formulaDiv_hopper_fill" class="formula"></div>
+          <div id="formulaDiv_hopper_disc" class="formula"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}
+
+{% block jsList %}
+{{ block.super }}
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.2/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.2/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false}
+                ]
+            });">
+            </script>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- jQuery dahil et (CDN veya static) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/echarts.min.js' %}"></script>
+<script src="{% static 'js/mycustomchart.js' %}"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const sekilInput = document.getElementById("sekil");
+    const sekilId = document.getElementById("sekil_id");
+    const duvarInput = document.getElementById("duvarTipi");
+    const duvarId = document.getElementById("duvar_id");
+    const sekilList = document.getElementById("sekilList");
+    const duvarList = document.getElementById("duvarList");
+    const fields = document.getElementById("dynamicFields");
+    const preview = document.getElementById("shapePreview");
+
+    fillComboBox("/api/cb_materials/", "#particulate");
+    fetchAllCharts();
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+
+    //   // İnternet linkleri
+    //   const images = {
+    //     "Daire": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Circle_and_Square.svg",
+    //     "Kare": "https://upload.wikimedia.org/wikipedia/commons/4/43/Sqr_Geometry.png",
+    //     "Dikdörtgen": "https://upload.wikimedia.org/wikipedia/commons/9/96/Prostokat-rectangle.svg",
+    //     "Diğer": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Question_mark_icon.svg/1200px-Question_mark_icon.svg.png"
+    //   };
+    const images = {
+      "Daire": "{% static 'dist/img/daire.png' %}",
+      "Kare": "{% static 'dist/img/kare.png' %}",
+      "Dikdörtgen": "{% static 'dist/img/dikdortgen.png' %}",
+      "Diğer": "{% static 'dist/img/diger.png' %}"
+    };
+
+
+    // Hesaplama fonksiyonu
+    function calculateAndShow(shape) {
+      var { hacim, alan, cevre, silo_tipi: type, dc, sorth_div_long } = calculateShapeData(shape);
+
+      // Sonuçları göster
+      const resultHtml = `
           <img src="${images[shape]}" alt="${shape}">
           ${alan !== null ? `<p><strong>Hacim:</strong> ${alan.toFixed(2)}</p>` : ""}
           ${type !== null ? `<p><strong>Silo tipi:</strong> ${type}</p>` : ""}
         `;
-        // preview.innerHTML = resultHtml;
-      }
+      // preview.innerHTML = resultHtml;
+    }
 
-      // Inputa focus olunca aç
-      comboInput.addEventListener("focus", () => {
-        comboList.classList.add("show");
-      });
+    // Inputa focus olunca aç
+    sekilInput.addEventListener("focus", () => {
+      sekilList.classList.add("show");
+    });
 
-      // Filtreleme
-      comboInput.addEventListener("keyup", () => {
-        const value = comboInput.value.toLowerCase();
-        [...comboList.children].forEach(li => {
-          li.style.display = li.textContent.toLowerCase().includes(value) ? "" : "none";
-        });
-      });
-
-      // Liste elemanı seçildiğinde
-      comboList.addEventListener("click", e => {
-        if (e.target.tagName === "LI") {
-          const selected = e.target.textContent;
-          comboInput.value = selected;
-          comboList.classList.remove("show");
-
-          // Alanları temizle
-          fields.innerHTML = "";
-
-          // Resmi + boş sonuç alanı göster
-          // preview.innerHTML = `<img src="${images[selected]}" alt="${selected}">`;
-
-          // Seçime göre input alanları
-          let inputsHtml = "";
-          if (selected === "Daire") {
-            inputsHtml = `
-              <div class="mb-3">
-                <label for="radius" class="form-label">Çap</label>
-                <input type="number" class="form-control calc-input" id="radius" placeholder="Çapı giriniz">
-              </div>`;
-          } else if (selected === "Kare") {
-            inputsHtml = `
-              <div class="mb-3">
-                <label for="squareSide" class="form-label">Bir Kenar</label>
-                <input type="number" class="form-control calc-input" id="squareSide" placeholder="Kenar uzunluğu giriniz">
-              </div>`;
-          } else if (selected === "Dikdörtgen") {
-            inputsHtml = `
-              <div class="mb-3">
-                <label for="rectLong" class="form-label">Uzun Kenar</label>
-                <input type="number" class="form-control calc-input" id="rectLong" placeholder="Uzun kenar giriniz">
-              </div>
-              <div class="mb-3">
-                <label for="rectShort" class="form-label">Kısa Kenar</label>
-                <input type="number" class="form-control calc-input" id="rectShort" placeholder="Kısa kenar giriniz">
-              </div>`;
-          } else if (selected === "Diğer") {
-            inputsHtml = `
-              <div class="mb-3">
-                <label for="area" class="form-label">Alan</label>
-                <input type="number" class="form-control calc-input" id="area" placeholder="Alan giriniz">
-              </div>
-              <div class="mb-3">
-                <label for="perimeter" class="form-label">Çevre</label>
-                <input type="number" class="form-control calc-input" id="perimeter" placeholder="Çevre giriniz">
-              </div>
-              <div class="mb-3">
-                <label for="width" class="form-label">dc</label>
-                <input type="number" class="form-control calc-input" id="width" placeholder="dc giriniz">
-              </div>`;
-          }
-
-          fields.innerHTML = inputsHtml;
-
-          // Dinamik hesaplama için event ekle
-          document.querySelectorAll(".calc-input").forEach(input => {
-            input.addEventListener("input", () => calculateAndShow(selected));
-          });
-        }
-      });
-
-      // Input dışında tıklanınca listeyi kapat
-      document.addEventListener("click", e => {
-        if (!e.target.closest(".dropdown")) {
-          comboList.classList.remove("show");
-        }
+    // Filtreleme
+    sekilInput.addEventListener("keyup", () => {
+      const value = sekilInput.value.toLowerCase();
+      [...sekilList.children].forEach(li => {
+        li.style.display = li.textContent.toLowerCase().includes(value) ? "" : "none";
       });
     });
 
-    function fillComboBox(url, selectId) {
-      let select = $(selectId);
+    // Liste elemanı seçildiğinde
+    sekilList.addEventListener("click", e => {
+      if (e.target.tagName === "LI") {
+        const selected = e.target.textContent;
+        const selectedId = e.target.dataset.id;
+        sekilInput.value = selected;
+        sekilId.value = selectedId;
+        sekilList.classList.remove("show");
 
+
+        // Alanları temizle
+        fields.innerHTML = "";
+
+        // Resmi + boş sonuç alanı göster
+        // preview.innerHTML = `<img src="${images[selected]}" alt="${selected}">`;
+
+        // Seçime göre input alanları
+        let inputsHtml = "";
+        if (selected === "Daire") {
+          inputsHtml = `
+              <div class="row mb-3 align-items-center">
+                <label for="cap" class="col-sm-4 col-form-label">Çap(mm)</label>
+                <div class="col-sm-8">
+                  <input type="number" class="form-control calc-input" id="cap" placeholder="Çapı giriniz">
+                </div>
+              </div>`;
+        } else if (selected === "Kare") {
+          inputsHtml = `
+            
+              <div class="row mb-3 align-items-center">
+                <label for="squareSide" class="col-sm-4 col-form-label">Bir Kenar(mm)</label>
+                <div class="col-sm-8">
+                  <input type="number" class="form-control calc-input" id="squareSide" placeholder="Kenar uzunluğu giriniz">
+                </div>
+              </div>`;
+        } else if (selected === "Dikdörtgen") {
+          inputsHtml = `
+              <div class="row mb-3 align-items-center">
+                <label for="rectLong" class="col-sm-4 col-form-label">Uzun Kenar(mm)</label>
+                <div class="col-sm-8">
+                  <input type="number" class="form-control calc-input" id="rectLong" placeholder="Uzun kenar giriniz">
+                </div>
+              </div>
+              <div class="row mb-3 align-items-center">
+                <label for="rectShort" class="col-sm-4 col-form-label">Kısa Kenar(mm)</label>
+                <div class="col-sm-8">
+                  <input type="number" class="form-control calc-input" id="rectShort" placeholder="Kısa kenar giriniz">
+                </div>
+              </div>`;
+        } else if (selected === "Diğer") {
+          inputsHtml = `
+            
+              <div class="row mb-3 align-items-center">
+                <label for="area" class="col-sm-4 col-form-label">Alan(mm<sup>2</sup>)</label>
+                <div class="col-sm-8">
+                  <input type="number" class="form-control calc-input" id="area" placeholder="Alan giriniz">
+                </div>
+              </div>
+              <div class="row mb-3 align-items-center">
+                <label for="perimeter" class="col-sm-4 col-form-label">Çevre(mm)</label>
+                <div class="col-sm-8">
+                  <input type="number" class="form-control calc-input" id="perimeter" placeholder="Çevre giriniz">
+                </div>
+              </div>
+              <div class="row mb-3 align-items-center">
+                <label for="width" class="col-sm-4 col-form-label">d<small class="small-custom">c</small></label>
+                <div class="col-sm-8">
+                  <input type="number" class="form-control calc-input" id="width" placeholder="dc giriniz">
+                </div>
+              </div>`;
+        }
+
+        fields.innerHTML = inputsHtml;
+
+        // Dinamik hesaplama için event ekle
+        document.querySelectorAll(".calc-input").forEach(input => {
+          input.addEventListener("input", () => calculateAndShow(selected));
+        });
+      }
+    });
+
+    // Inputa focus olunca aç
+    duvarInput.addEventListener("focus", () => {
+      duvarList.classList.add("show");
+    });
+
+    // Filtreleme
+    duvarInput.addEventListener("keyup", () => {
+      const value = duvarInput.value.toLowerCase();
+      [...duvarList.children].forEach(li => {
+        li.style.display = li.textContent.toLowerCase().includes(value) ? "" : "none";
+      });
+    });
+
+    // Liste elemanı seçildiğinde
+    duvarList.addEventListener("click", e => {
+      if (e.target.tagName === "LI") {
+        const selected = e.target.textContent;
+        const selectedId = e.target.dataset.id;
+        duvarInput.value = selected;
+        duvarId.value = selectedId;
+        duvarList.classList.remove("show");
+      }
+    });
+
+    // Input dışında tıklanınca listeyi kapat
+    document.addEventListener("click", e => {
+      if (!e.target.closest(".dropdown")) {
+        sekilList.classList.remove("show");
+        duvarList.classList.remove("show");
+      }
+    });
+  });
+
+  function calculateShapeData(shape) {
+    let alan = null;
+    let hacim = null;
+    let cevre = null;
+    let type = "Squat";
+    let w = 0;
+    let sorth_div_long = 1;
+
+    const h = parseFloat(document.getElementById("height")?.value);
+
+    if (shape === "Daire") {
+      const cap = parseFloat(document.getElementById("cap")?.value);
+      if (!isNaN(cap) && cap > 0 && !isNaN(h) && h > 0) {
+        const r = cap / 2;
+        w = cap;
+        alan = Math.PI * r * r;
+        hacim = alan * h;
+        cevre = 2 * Math.PI * r;
+      }
+    }
+    else if (shape === "Kare") {
+      const a = parseFloat(document.getElementById("squareSide")?.value);
+      if (!isNaN(a) && a > 0 && !isNaN(h) && h > 0) {
+        w = a;
+        alan = a * a;
+        hacim = alan * h;
+        cevre = 4 * a;
+      }
+    }
+    else if (shape === "Dikdörtgen") {
+      const uzun = parseFloat(document.getElementById("rectLong")?.value);
+      const kisa = parseFloat(document.getElementById("rectShort")?.value);
+      if (!isNaN(uzun) && uzun > 0 && !isNaN(kisa) && kisa > 0 && !isNaN(h) && h > 0) {
+        w = kisa;
+        alan = uzun * kisa;
+        hacim = alan * h;
+        cevre = 2 * (uzun + kisa);
+        if (uzun > kisa) {
+          sorth_div_long = kisa / uzun;
+        } else {
+          sorth_div_long = uzun / kisa;
+        }
+      }
+    }
+    else if (shape === "Diğer") {
+      const area = parseFloat(document.getElementById("area")?.value);
+      const perim = parseFloat(document.getElementById("perimeter")?.value);
+      w = parseFloat(document.getElementById("width")?.value);
+      if (!isNaN(area)) alan = area;
+      if (!isNaN(perim)) cevre = perim;
+    }
+
+    // Silo tipi belirleme
+    if (!isNaN(h) && h > 0 && w > 0) {
+      const tmp_type = h / w;
+      if (tmp_type > 2) {
+        type = "Slender";
+      }
+    }
+
+    // Hesap sonucu nesne döndür
+    return {
+      alan: alan,
+      hacim: hacim,
+      cevre: cevre,
+      silo_tipi: type,
+      dc: w,
+      sorth_div_long: sorth_div_long,
+    };
+  }
+
+  function fillComboBox(url, selectId) {
+    let select = $(selectId);
+
+    $.ajax({
+      url: url,
+      type: "GET",
+      dataType: "json",
+      success: function (data) {
+        select.empty();  // önce temizle
+        select.append('<option value="">Seçiniz</option>');
+
+        $.each(data, function (i, item) {
+          select.append(
+            $('<option>', {
+              value: item.id,
+              text: item.name
+            })
+          );
+        });
+      },
+      error: function (xhr, status, error) {
+        console.error("Combobox doldurulurken hata:", error);
+        $select.html('<option value="">Hata oluştu</option>');
+      }
+    });
+  }
+
+  function cb_particulate() {
+    // Combobox'ı seç
+    let selectBox = document.getElementById("particulate");
+
+    // Seçili değeri al
+    let secilenDeger = selectBox.value;
+
+    get_particulate(secilenDeger);
+  }
+
+  function get_particulate(id) {
+    var weight = 0;
+    var url = "/api/materials/" + id + "/"
+    $.ajax({
+      url: url,
+      type: "GET",
+      dataType: "json",
+      success: function (data) {
+        weight = knPerM3_to_kgPerM3(data.unit_weight_upper / 100)
+        document.getElementById("unit_weight").value = weight
+        document.getElementById("cop").value = data.patch_load_factor / 100
+        console.log(data)
+      },
+      error: function (xhr, status, error) {
+        console.error("Combobox doldurulurken hata:", error);
+        $select.html('<option value="">Hata oluştu</option>');
+      }
+    });
+  }
+
+  // Initialize ECharts instances for each chart element
+  var chartInstances = {
+    fillPressures: echarts.init(document.getElementById('lineChartFillPressures')),
+    discPressures: echarts.init(document.getElementById('lineChartDiscPressures')),
+    fillHopperPressures: echarts.init(document.getElementById('lineChartFillHopperPressures')),
+    discHopperPressures: echarts.init(document.getElementById('lineChartDiscHopperPressures')),
+
+  };
+
+  // Configurations for each chart's title text
+  var chartTitles = {
+    fillPressures: 'Doldurma Basınçları',
+    discPressures: 'Boşaltma Basınçları',
+    fillHopperPressures: 'Doldurma Basınçları, Konik',
+    discHopperPressures: 'Boşaltma Basınçları, Konik',
+  };
+
+  // Fetch and render all charts
+  function fetchAllCharts() {
+    getChartData('/fill-pressures', 'fillPressures', 'FillPressures', "/api");
+    getChartData('/disc-pressures', 'discPressures', 'DiscPressures', "/api");
+    getChartData('/fill-hopper', 'fillHopperPressures', 'FillHopperPressures', "/api");
+    getChartData('/disc-hopper', 'discHopperPressures', 'DiscHopperPressures', "/api");
+
+  }
+
+  // Genel fonksiyon (g parametresi verilebilir, default g = 10)
+  function knPerM3_to_kgPerM3(knPerM3, g = 10) {
+    // 1 kN = 1000 N, yoğunluk = (N/m3) / g
+    return (knPerM3 * 1000) / g;
+  }
+
+  function kgPerM3_to_knPerM3(kgPerM3, g = 10) {
+    // ters dönüşüm: (kg/m3 * g) / 1000
+    return (kgPerM3 * g) / 1000;
+  }
+
+  // Radyan → Derece
+  function radToDeg(radian) {
+    return radian * (180 / Math.PI);
+  }
+
+  // Derece → Radyan
+  function degToRad(degree) {
+    return degree * (Math.PI / 180);
+  }
+
+
+  // Form kaydetme butonu
+  function func_classModal_kaydet(item) {
+
+    var shape = document.getElementById("sekil").value;
+    var { hacim, alan, cevre, silo_tipi: type, dc, sorth_div_long } = calculateShapeData(shape);
+    var class_type = document.getElementById("cb_class").value;
+    let data = get_form_data("silo_calculate")
+    data["alan"] = alan;
+    data["hacim"] = hacim;
+    data["cevre"] = cevre;
+    data["silo_tipi"] = type;
+    data["dc"] = dc;
+    data["class_type"] = class_type;
+    data["sorth_div_long"] = sorth_div_long;
+    var accessToken = sessionStorage.getItem("access");  // JWT token
+
+    let allowedClassTypes = ["1", "2", "3"];
+
+    if (allowedClassTypes.includes(class_type)) {
+      // AJAX JSON gönderimi
       $.ajax({
-        url: url,
-        type: "GET",
-        dataType: "json",
-        success: function (data) {
-          select.empty();  // önce temizle
-          select.append('<option value="">Seçiniz</option>');
+        type: "POST",
+        url: "/api/silo_form/",
+        headers: {
+          'Content-Type': 'application/json',
+          // 'X-CSRFToken': '{{ csrf_token }}',       // CSRF token header
+          'Authorization': 'Bearer ' + accessToken // JWT token header
+        },
+        data: JSON.stringify(data),
+        contentType: "application/json",
+        success: function (response) {
+          renderChartData(response.chart_data, 'fillPressures', 'FillPressures');
+          renderChartData(response.discharge_chart_data, 'discPressures', 'DiscPressures');
+          renderChartData(response.fill_chart_data_hopper, 'fillHopperPressures', 'FillHopperPressures');
+          renderChartData(response.discharge_chart_data_hopper, 'discHopperPressures', 'DiscHopperPressures');
+          saveChartDataToCookie("FillPressures", response.chart_data.dates, response.chart_data.series, "FillPressures");
+          saveChartDataToCookie("DiscPressures", response.discharge_chart_data.dates, response.discharge_chart_data.series, "DiscPressures");
+          saveChartDataToCookie("FillHopperPressures", response.fill_chart_data_hopper.dates, response.fill_chart_data_hopper.series, "FillHopperPressures");
+          saveChartDataToCookie("DiscHopperPressures", response.discharge_chart_data_hopper.dates, response.discharge_chart_data_hopper.series, "DiscHopperPressures");
+          document.getElementById("formulaDiv_silo_fill").innerHTML = response.formul_dict.fill_phf + response.formul_dict.fill_pwf + response.formul_dict.fill_pvf;
+          document.getElementById("formulaDiv_silo_disc").innerHTML = response.formul_dict.disc_phf + response.formul_dict.disc_pwf + response.formul_dict.disc_pvf;
+          document.getElementById("formulaDiv_hopper_fill").innerHTML = response.formul_dict.hopper_fill_pnf + response.formul_dict.hopper_fill_ptf;
+          document.getElementById("formulaDiv_hopper_disc").innerHTML = response.formul_dict.hopper_disc_pnf + response.formul_dict.hopper_disc_ptf;
 
-          $.each(data, function (i, item) {
-            select.append(
-              $('<option>', {
-                value: item.id,
-                text: item.name
-              })
-            );
-          });
+          $('#classModal').modal('hide');
         },
         error: function (xhr, status, error) {
-          console.error("Combobox doldurulurken hata:", error);
-          $select.html('<option value="">Hata oluştu</option>');
+          alert("Bir hata oluştu: " + xhr.responseJSON.detail);
         }
       });
+    } else {
+      alert("Geçersiz seçim! Lütfen Class seçin.");
     }
+  }
 
-    function cb_particulate(){
-        // Combobox'ı seç
-      let selectBox = document.getElementById("particulate");
+  function form_control_empty_fields(form_id) {
+    const form = document.getElementById(form_id);
 
-      // Seçili değeri al
-      let secilenDeger = selectBox.value;
+    // Boş alan kontrolü
+    const fields = form.querySelectorAll("input, select, textarea");
+    let bosAlanlar = [];
+    let data = {};  // ← Burası eksikti
 
-      get_particulate(secilenDeger);
-    }
+    fields.forEach(field => {
+      if (
+        field.type !== "hidden" &&
+        field.type !== "checkbox" &&
+        field.type !== "button" &&
+        field.type !== "submit"
+      ) {
+        if (field.value.trim() === "") {
+          bosAlanlar.push(field);
+          field.classList.add("is-invalid");
+        } else {
+          field.classList.remove("is-invalid");
+        }
 
-    function get_particulate(id){
-      var url = "http://127.0.0.1:8000/api/materials/"+id+"/"
-        $.ajax({
-          url: url,
-          type: "GET",
-          dataType: "json",
-          success: function (data) {
-            console.log(data)
-          },
-          error: function (xhr, status, error) {
-            console.error("Combobox doldurulurken hata:", error);
-            $select.html('<option value="">Hata oluştu</option>');
-          }
+      }
+      // Checkbox ve diğer alanları data objesine ekle
+      if (field.type === "checkbox") {
+        data[field.name || field.id] = field.checked;
+      } else {
+        data[field.name || field.id] = field.value;
+      }
+    });
+
+    if (bosAlanlar.length > 0) {
+      let msg = "Lütfen aşağıdaki alanları doldurunuz:\n";
+      bosAlanlar.forEach(f => {
+        const label = form.querySelector(`label[for="${f.id}"]`);
+        msg += "• " + (label ? label.textContent.trim() : (f.name || f.id)) + "\n";
       });
+      alert(msg);
+      return false;
     }
+    return true;
+  }
 
-          // Initialize ECharts instances for each chart element
-    var chartInstances = {
-        fillPressures: echarts.init(document.getElementById('lineChartFillPressures')),
-        discPressures: echarts.init(document.getElementById('lineChartDiscPressures')),
-        fillHopperPressures: echarts.init(document.getElementById('lineChartFillHopperPressures')),
-        discHopperPressures: echarts.init(document.getElementById('lineChartDiscHopperPressures')),
-        fillDiscHopperPressures: echarts.init(document.getElementById('lineChartFillDiscHopperPressures'))
+  function get_form_data(form_id) {
+    const form = document.getElementById(form_id);
+    const fields = form.querySelectorAll("input, select, textarea");
+    let data = {};
+
+    fields.forEach(field => {
+      if (!field.name && !field.id) return; // isimsiz alanları atla
+
+      const key = field.name || field.id;
+      let value;
+
+      if (field.type === "checkbox") {
+        value = field.checked;
+      } else if (field.type === "radio") {
+        if (!field.checked) return; // sadece seçili radio’yu al
+        value = field.value;
+      } else {
+        value = field.value;
+      }
+
+      data[key] = value;
+    });
+
+    return data;
+  }
+
+  // String → float güvenli dönüşüm, virgül veya nokta farketmez
+  function stringToFloat(str) {
+    str = String(str).replace(',', '.');
+    const num = parseFloat(str);
+    return isNaN(num) ? 0 : parseFloat(num.toFixed(2));
+  }
+
+  // mm3 → m3 dönüşümü
+  function mm3ToM3(value) {
+    const num = stringToFloat(value);
+    return parseFloat((num / 1e9).toFixed(2));
+  }
+
+  // kg → g dönüşümü
+  function kgToG(value) {
+    const num = stringToFloat(value);
+    return parseFloat((num * 1000).toFixed(2));
+  }
+
+  // g → ton dönüşümü
+  function gToTone(value) {
+    const num = stringToFloat(value);
+    return parseFloat((num / 1e6).toFixed(2));
+  }
+
+  function downloadChartDataAsXLSX(dates, seriesData, fileName = "chart_data") {
+    let sheetData = [];
+
+    // Başlık satırı
+    let header = ["Date"];
+    seriesData.forEach(s => header.push(s.name));
+    sheetData.push(header);
+
+    // Veri satırları
+    dates.forEach((date, idx) => {
+      let row = [date];
+      seriesData.forEach(s => row.push(s.values[idx] ?? ""));
+      sheetData.push(row);
+    });
+
+    // Çalışma kitabı oluştur
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "ChartData");
+
+    // Dosyayı indir
+    XLSX.writeFile(wb, fileName + ".xlsx");
+  }
+
+  function saveChartDataToCookie(chartId, dates, seriesData, fileName = "chart_data") {
+    const data = {
+      dates: dates,
+      seriesData: seriesData,
+      fileName: fileName
     };
 
-    // Configurations for each chart's title text
-    var chartTitles = {
-        fillPressures: 'Filling Pressures',
-        discPressures: 'Discharge Pressures',
-        fillHopperPressures: 'Filling Pressures, Steep hoppers',
-        discHopperPressures: 'Discharge Pressures, Steep hoppers',
-        fillDiscHopperPressures: 'Filling And Discharge Pressures, Steep hoppers',
-    };
+    // Cookie 7 gün geçerli
+    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toUTCString();
 
-        // Fetch and render all charts
-    function fetchAllCharts() {
-        getChartData('/fill-pressures', 'fillPressures', 'FillPressures', "/api");
-        getChartData('/disc-pressures', 'discPressures', 'DiscPressures', "/api");
-        getChartData('/fill-hopper', 'fillHopperPressures', 'FillHopperPressures', "/api");
-        getChartData('/disc-hopper', 'discHopperPressures', 'DiscHopperPressures', "/api");
-        getChartData('/fill--disc-hopper', 'fillDiscHopperPressures', 'FillDiscHopperPressures', "/api");
+    document.cookie = `${chartId}=` + encodeURIComponent(JSON.stringify(data)) + "; expires=" + expires + "; path=/";
+  }
+
+  function getChartDataFromCookie(chartId) {
+    const cookies = document.cookie.split("; ");
+
+    for (let cookie of cookies) {
+      const [key, value] = cookie.split("=");
+
+      if (key === chartId) {
+        return JSON.parse(decodeURIComponent(value));
+      }
+    }
+    return null;
+  }
+
+  function exportChartCookieData(chartId) {
+    const data = getChartDataFromCookie(chartId);
+    if (!data) {
+      alert("Bu grafik için veri bulunamadı!");
+      return;
     }
 
+    downloadChartDataAsXLSX(data.dates, data.seriesData, data.fileName);
+  }
 
-  </script>
-</body>
 
-</html>
+  function func_form_kaydet(btn) {
+    var form_control = form_control_empty_fields("silo_calculate")
+    if (form_control) {
+      var shape = document.getElementById("sekil").value;
+      var unit_weight = document.getElementById("unit_weight").value;
+      var { hacim, alan, cevre, silo_tipi: type, dc, sorth_div_long } = calculateShapeData(shape);
+
+      let gramM3 = mm3ToM3(stringToFloat(hacim)) * kgToG(stringToFloat(unit_weight))
+      let tonaj = gToTone(gramM3)
+
+      document.forms['formClass']['class_tonaj'].value = tonaj;
+      document.forms['formClass']['class_silo_type'].value = type;
+
+      if (tonaj > 100) {
+        document.forms['formClass']['cb_class'].value = "2";
+      } else {
+        document.forms['formClass']['cb_class'].value = "1";
+      }
+
+      $('#classModal').modal('show');
+    }
+  }
+
+  function func_duvar_detail() {
+    $('#duvarDetailModal').modal('show');
+  }
+
+  function func_class_detail() {
+    $('#classDetailModal').modal('show');
+  }
+
+  function showFunc(type) {
+    var siloFill = document.getElementById("formulaDiv_silo_fill");
+    var siloDisc = document.getElementById("formulaDiv_silo_disc");
+    var hopperFill = document.getElementById("formulaDiv_hopper_fill");
+    var hopperDisc = document.getElementById("formulaDiv_hopper_disc");
+
+    // Önce hepsini gizle
+    var all = [siloFill, siloDisc, hopperFill, hopperDisc];
+    all.forEach(div => div.style.display = "none");
+
+    // Gösterilecek div
+    let targetDiv = null;
+
+    if (type === "siloFill") {
+      targetDiv = siloFill;
+    }
+    else if (type === "siloDisc") {
+      targetDiv = siloDisc;
+    }
+    else if (type === "hopperFill") {
+      targetDiv = hopperFill;
+    }
+    else if (type === "hopperDisc") {
+      targetDiv = hopperDisc;
+    }
+
+    // İlgili div'i göster
+    if (targetDiv) {
+      targetDiv.style.display = "block";
+
+      // Sadece ilgili div'i render et
+      renderMathInElement(targetDiv);
+    }
+
+    $('#showFuncModal').modal('show');
+  }
+
+  function func_mail_sender() {
+    $.ajax({
+      type: "POST",
+      url: "/mail_sender",
+      contentType: "application/json",
+      success: function (response) {
+        console.log("tmp");
+      },
+      error: function (xhr, status, error) {
+        alert("Bir hata oluştu: " + error);
+      }
+    });
+  }
+
+
+</script>
+{% endblock %}

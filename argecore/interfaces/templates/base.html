@@ -13,8 +13,7 @@
     <link href="{% static 'plugins/bootstrap5/bootstrap5.min.css' %}" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="{% static 'plugins/fontawesome-free/css/all.min.css' %}" rel="stylesheet">
-    <!-- Ionicons -->
-    <link href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css" rel="stylesheet">
+
     <!-- SweetAlert2 -->
     <link href="{% static 'plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css' %}"
           rel="stylesheet">
@@ -139,6 +138,7 @@
 <script src="{% static 'custom/bootstrap-table.js' %}"></script>
 <script src="{% static 'custom/bootstrap-table-auto-refresh.js' %}"></script>
 <script src="{% static 'custom/datatables-rowgroup.js' %}"></script>
+<script src="{% static 'js/xlsx.min.js' %}"></script>
 
 
 <!-- Buttons JS ve dışa aktarma eklentileri -->
@@ -179,20 +179,37 @@ toastr.options = {
 var UPDATE = "UPDATE";
 var INSERT = "INSERT";
 
-// function logout(){
-//     $.ajax({
-//         type: "POST",
-//         url: "/rest-auth/logout/",
-//         data: {csrfmiddlewaretoken: '{{ csrf_token }}'},
-//         success: function (msg) {
-//             window.location.href = "/login";
-//             Toast.fire({icon: 'success',body: msg.detail })
-//         },
-//         error: function (error) {
-//             Toast.fire({icon: 'error', title: "ERROR :".concat(error)})
-//         }
-//     });
-// }
+
+function clearAllAuth() {
+    // sessionStorage ve localStorage
+    sessionStorage.clear();
+    localStorage.clear();
+        // Cookie temizleme
+    const cookies = document.cookie.split("; ");
+    for (const c of cookies) {
+        const eqPos = c.indexOf("=");
+        const name = eqPos > -1 ? c.substr(0, eqPos) : c;
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+    }
+}
+
+function logout(){
+    $.ajax({
+        type: "POST",
+        url: "/api-auth/logout/",
+        data: {csrfmiddlewaretoken: '{{ csrf_token }}'},
+        success: function (msg) {
+            clearAllAuth();
+            window.location.href = "/login";
+            Toast.fire({icon: 'success',body: msg.detail })
+        },
+        error: function (error) {
+            Toast.fire({icon: 'error', title: "ERROR :".concat(error)})
+        }
+    });
+}
+
+
 
 </script>
 {% block jsList %}

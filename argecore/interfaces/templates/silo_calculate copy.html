@@ -1,0 +1,471 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dinamik Combobox Hesaplama</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .shape-preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 350px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background: #f8f9fa;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .shape-preview img {
+      max-width: 150px;
+      max-height: 150px;
+      object-fit: contain;
+      margin-bottom: 10px;
+    }
+
+    .combobox-list {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .combobox-list li {
+      cursor: pointer;
+    }
+
+        /* Ortala */
+    .row-chart {
+        position: relative;
+        /* Yüklenme çubuğunun ortalanabilmesi için gerekli */
+        height: 500px;
+        /* Grafik alanının yüksekliği */
+    }
+
+        /* Yüklenme animasyonu */
+    .loading-spinner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 500px;
+        position: absolute;
+        background-color: rgba(255, 255, 255, 0.8);
+        z-index: 10;
+    }
+
+    .spinner {
+        border: 8px solid #f3f3f3;
+        border-top: 8px solid #3498db;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+    }
+
+    .mychart_css {
+        width: 90%;
+        height: 500px;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+  </style>
+</head>
+
+<body class="p-4">
+
+  <div class="">
+    <div class="row">
+      <!-- Sol taraf: Combobox + inputlar -->
+      <div class="col-md-2">
+      <img src="{% get_media_prefix %}images/sekil_2.png" style="width: 100%;" alt="geometry">
+      </div>
+      <div class="col-md-6">
+        <form id="silo_calculate">
+          <h4 class="text-center">Şekil Seçimi</h4>
+          <div class="row">
+            <div class="col-6">
+              <div class="mb-3">
+                <label for="particulate" class="form-label">Ürün</label>
+                <select id="particulate" class="form-select" onchange="cb_particulate()">
+                  <option value="">Yükleniyor...</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="height" class="form-label">Yükseklik (hc mm)</label>
+                <input type="number" class="form-control calc-input" id="height" placeholder="Yüksekliği giriniz">
+              </div>
+              <div class="mb-3">
+                <label for="height_konik" class="form-label">Konik Yükseklik (hh mm)</label>
+                <input type="number" class="form-control calc-input" id="height_konik" placeholder="Yüksekliği giriniz">
+              </div>
+              <div class="mb-3">
+                <label for="degress" class="form-label">Açı (ß)</label>
+                <input type="number" class="form-control calc-input" id="degress" placeholder="Açıyı giriniz">
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="dropdown mb-3">
+                <label for="comboInput" class="form-label">Şekil</label>
+                <input type="text" id="comboInput" class="form-control" placeholder="Seç veya yaz...">
+                <ul class="dropdown-menu combobox-list w-100" id="comboList">
+                  <li class="dropdown-item">Kare</li>
+                  <li class="dropdown-item">Dikdörtgen</li>
+                  <li class="dropdown-item">Daire</li>
+                  <li class="dropdown-item">Diğer</li>
+                </ul>
+              </div>
+              <!-- Dinamik alanlar -->
+              <div id="dynamicFields"></div>
+              <div class="mb-3">
+                <label for="height_range" class="form-label">Yükseklik adım aralığı (mm)</label>
+                <input type="number" class="form-control calc-input" id="height_range" placeholder="Aralık giriniz">
+              </div>
+
+              <div class="mb-3">
+                <label for="height_range_konik" class="form-label">Konik adım aralığı (mm)</label>
+                <input type="number" class="form-control calc-input" id="height_range_konik" placeholder="Aralık giriniz">
+              </div>
+            </div>
+          </div>  
+
+          <!-- <input type="hidden" name="tabloId_MACK" id="tabloId_FKLM" value=""> -->
+          <!-- <input type="hidden" name="action_MACK" id="action_FKLM" value=""> -->
+        </form>
+        
+      </div>
+
+      <!-- Sağ taraf: Resim önizleme + hesap sonuçları -->
+      <div class="col-md-4">
+        <div class="row">
+          <h4 class="text-center">Seçilen Şekil</h4>
+          <img src="{% get_media_prefix %}images/sekil_5.png" style="width: 100%;" alt="geometry_1">
+          <div id="shapePreview"></div>
+        </div>
+        
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+        <div class="row row-chart p-2">
+            <!-- Yüklenme çubuğu -->
+            <div id="loadingFillPressures" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Yükleniyor...</p>
+            </div>
+            <div id="lineChartFillPressures" class="mychart_css"></div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="row row-chart p-2">
+            <!-- Yüklenme çubuğu -->
+            <div id="loadingDiscPressures" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Yükleniyor...</p>
+            </div>
+            <div id="lineChartDiscPressures" class="mychart_css"></div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="row row-chart p-2">
+            <!-- Yüklenme çubuğu -->
+            <div id="loadingFillHopperPressures" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Yükleniyor...</p>
+            </div>
+            <div id="lineChartFillHopperPressures" class="mychart_css"></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="row">
+      <div class="col-md-4">
+        <div class="row row-chart p-2">
+            <!-- Yüklenme çubuğu -->
+            <div id="loadingDiscHopperPressures" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Yükleniyor...</p>
+            </div>
+            <div id="lineChartDiscHopperPressures" class="mychart_css"></div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="row row-chart p-2">
+            <!-- Yüklenme çubuğu -->
+            <div id="loadingFillDiscHopperPressures" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Yükleniyor...</p>
+            </div>
+            <div id="lineChartFillDiscHopperPressures" class="mychart_css"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- jQuery dahil et (CDN veya static) -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="{% static 'js/echarts.min.js' %}"></script>
+  <script src="{% static 'js/mycustomchart.js' %}"></script>
+
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const comboInput = document.getElementById("comboInput");
+      const comboList = document.getElementById("comboList");
+      const fields = document.getElementById("dynamicFields");
+      const preview = document.getElementById("shapePreview");
+
+      fillComboBox("/api/cb_materials/", "#particulate");
+      fetchAllCharts();
+
+      //   // İnternet linkleri
+      //   const images = {
+      //     "Daire": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Circle_and_Square.svg",
+      //     "Kare": "https://upload.wikimedia.org/wikipedia/commons/4/43/Sqr_Geometry.png",
+      //     "Dikdörtgen": "https://upload.wikimedia.org/wikipedia/commons/9/96/Prostokat-rectangle.svg",
+      //     "Diğer": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Question_mark_icon.svg/1200px-Question_mark_icon.svg.png"
+      //   };
+      const images = {
+        "Daire": "{% get_media_prefix %}images/daire.png",
+        "Kare": "{% get_media_prefix %}images/kare.png",
+        "Dikdörtgen": "{% get_media_prefix %}images/dikdortgen.png",
+        "Diğer": "{% get_media_prefix %}images/diger.png"
+      };
+      // Hesaplama fonksiyonu
+      function calculateAndShow(shape) {
+        let alan = null;
+        let cevre = null;
+        var h = parseFloat(document.getElementById("height")?.value);
+        var w = 0;
+        var type = "Squat";
+        if (shape === "Daire") {
+          var cap = parseFloat(document.getElementById("radius")?.value);
+          var r = cap/2
+          if (!isNaN(cap) && cap > 0) {
+            w = cap;
+            alan = Math.PI * r * r * h;
+            cevre = 2 * Math.PI * r;
+          }
+        } else if (shape === "Kare") {
+          var a = parseFloat(document.getElementById("squareSide")?.value);
+          if (!isNaN(a) && a > 0) {
+            w = a;
+            alan = a * a * h;
+            cevre = 4 * a;
+          }
+        } else if (shape === "Dikdörtgen") {
+          var uzun = parseFloat(document.getElementById("rectLong")?.value);
+          var kisa = parseFloat(document.getElementById("rectShort")?.value);
+          if (!isNaN(uzun) && !isNaN(kisa) && uzun > 0 && kisa > 0) {
+            w = kisa;
+            alan = uzun * kisa * h;
+            cevre = 2 * (uzun + kisa);
+          }
+        } else if (shape === "Diğer") {
+          var area = parseFloat(document.getElementById("area")?.value);
+          var perim = parseFloat(document.getElementById("perimeter")?.value);
+          w = parseFloat(document.getElementById("width")?.value);
+          if (!isNaN(area)) alan = area;
+          if (!isNaN(perim)) cevre = perim;
+        }
+
+        if (!isNaN(h) && h > 0) {
+          var tmp_type = h / w;
+          if (tmp_type > 2) {
+            type = "Slender";
+          }
+        }
+
+        // Sonuçları göster
+        const resultHtml = `
+          <img src="${images[shape]}" alt="${shape}">
+          ${alan !== null ? `<p><strong>Hacim:</strong> ${alan.toFixed(2)}</p>` : ""}
+          ${type !== null ? `<p><strong>Silo tipi:</strong> ${type}</p>` : ""}
+        `;
+        // preview.innerHTML = resultHtml;
+      }
+
+      // Inputa focus olunca aç
+      comboInput.addEventListener("focus", () => {
+        comboList.classList.add("show");
+      });
+
+      // Filtreleme
+      comboInput.addEventListener("keyup", () => {
+        const value = comboInput.value.toLowerCase();
+        [...comboList.children].forEach(li => {
+          li.style.display = li.textContent.toLowerCase().includes(value) ? "" : "none";
+        });
+      });
+
+      // Liste elemanı seçildiğinde
+      comboList.addEventListener("click", e => {
+        if (e.target.tagName === "LI") {
+          const selected = e.target.textContent;
+          comboInput.value = selected;
+          comboList.classList.remove("show");
+
+          // Alanları temizle
+          fields.innerHTML = "";
+
+          // Resmi + boş sonuç alanı göster
+          // preview.innerHTML = `<img src="${images[selected]}" alt="${selected}">`;
+
+          // Seçime göre input alanları
+          let inputsHtml = "";
+          if (selected === "Daire") {
+            inputsHtml = `
+              <div class="mb-3">
+                <label for="radius" class="form-label">Çap</label>
+                <input type="number" class="form-control calc-input" id="radius" placeholder="Çapı giriniz">
+              </div>`;
+          } else if (selected === "Kare") {
+            inputsHtml = `
+              <div class="mb-3">
+                <label for="squareSide" class="form-label">Bir Kenar</label>
+                <input type="number" class="form-control calc-input" id="squareSide" placeholder="Kenar uzunluğu giriniz">
+              </div>`;
+          } else if (selected === "Dikdörtgen") {
+            inputsHtml = `
+              <div class="mb-3">
+                <label for="rectLong" class="form-label">Uzun Kenar</label>
+                <input type="number" class="form-control calc-input" id="rectLong" placeholder="Uzun kenar giriniz">
+              </div>
+              <div class="mb-3">
+                <label for="rectShort" class="form-label">Kısa Kenar</label>
+                <input type="number" class="form-control calc-input" id="rectShort" placeholder="Kısa kenar giriniz">
+              </div>`;
+          } else if (selected === "Diğer") {
+            inputsHtml = `
+              <div class="mb-3">
+                <label for="area" class="form-label">Alan</label>
+                <input type="number" class="form-control calc-input" id="area" placeholder="Alan giriniz">
+              </div>
+              <div class="mb-3">
+                <label for="perimeter" class="form-label">Çevre</label>
+                <input type="number" class="form-control calc-input" id="perimeter" placeholder="Çevre giriniz">
+              </div>
+              <div class="mb-3">
+                <label for="width" class="form-label">dc</label>
+                <input type="number" class="form-control calc-input" id="width" placeholder="dc giriniz">
+              </div>`;
+          }
+
+          fields.innerHTML = inputsHtml;
+
+          // Dinamik hesaplama için event ekle
+          document.querySelectorAll(".calc-input").forEach(input => {
+            input.addEventListener("input", () => calculateAndShow(selected));
+          });
+        }
+      });
+
+      // Input dışında tıklanınca listeyi kapat
+      document.addEventListener("click", e => {
+        if (!e.target.closest(".dropdown")) {
+          comboList.classList.remove("show");
+        }
+      });
+    });
+
+    function fillComboBox(url, selectId) {
+      let select = $(selectId);
+
+      $.ajax({
+        url: url,
+        type: "GET",
+        dataType: "json",
+        success: function (data) {
+          select.empty();  // önce temizle
+          select.append('<option value="">Seçiniz</option>');
+
+          $.each(data, function (i, item) {
+            select.append(
+              $('<option>', {
+                value: item.id,
+                text: item.name
+              })
+            );
+          });
+        },
+        error: function (xhr, status, error) {
+          console.error("Combobox doldurulurken hata:", error);
+          $select.html('<option value="">Hata oluştu</option>');
+        }
+      });
+    }
+
+    function cb_particulate(){
+        // Combobox'ı seç
+      let selectBox = document.getElementById("particulate");
+
+      // Seçili değeri al
+      let secilenDeger = selectBox.value;
+
+      get_particulate(secilenDeger);
+    }
+
+    function get_particulate(id){
+      var url = "http://127.0.0.1:8000/api/materials/"+id+"/"
+        $.ajax({
+          url: url,
+          type: "GET",
+          dataType: "json",
+          success: function (data) {
+            console.log(data)
+          },
+          error: function (xhr, status, error) {
+            console.error("Combobox doldurulurken hata:", error);
+            $select.html('<option value="">Hata oluştu</option>');
+          }
+      });
+    }
+
+          // Initialize ECharts instances for each chart element
+    var chartInstances = {
+        fillPressures: echarts.init(document.getElementById('lineChartFillPressures')),
+        discPressures: echarts.init(document.getElementById('lineChartDiscPressures')),
+        fillHopperPressures: echarts.init(document.getElementById('lineChartFillHopperPressures')),
+        discHopperPressures: echarts.init(document.getElementById('lineChartDiscHopperPressures')),
+        fillDiscHopperPressures: echarts.init(document.getElementById('lineChartFillDiscHopperPressures'))
+    };
+
+    // Configurations for each chart's title text
+    var chartTitles = {
+        fillPressures: 'Filling Pressures',
+        discPressures: 'Discharge Pressures',
+        fillHopperPressures: 'Filling Pressures, Steep hoppers',
+        discHopperPressures: 'Discharge Pressures, Steep hoppers',
+        fillDiscHopperPressures: 'Filling And Discharge Pressures, Steep hoppers',
+    };
+
+        // Fetch and render all charts
+    function fetchAllCharts() {
+        getChartData('/fill-pressures', 'fillPressures', 'FillPressures', "/api");
+        getChartData('/disc-pressures', 'discPressures', 'DiscPressures', "/api");
+        getChartData('/fill-hopper', 'fillHopperPressures', 'FillHopperPressures', "/api");
+        getChartData('/disc-hopper', 'discHopperPressures', 'DiscHopperPressures', "/api");
+        getChartData('/fill--disc-hopper', 'fillDiscHopperPressures', 'FillDiscHopperPressures', "/api");
+    }
+
+
+  </script>
+</body>
+
+</html>

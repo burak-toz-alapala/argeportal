@@ -2,6 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .viewsets.silo_calculate_views import SiloCalculationView, MaterialViewSet, MaterialComboboxViewSet, SiloFormAPIView
 from .viewsets.silo_calculate_views import PressureFillDataView, PressureDischargeDataView, PressureFillHopperDataView, PressureDischargeHopperDataView, PressureFillAndDischargeHopperDataView
+from .viewsets.mail_sender_views import MailSenderT
 from .views import *
 
 router = DefaultRouter()
@@ -19,4 +20,7 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('', home_page, name='home'),
     path('tmp', tmp_page, name='tmp'),
+    path('login', login_page, name='login'),
+    path('no-permissions', no_permissions_page, name='no-permissions'),
+    path('mail_sender', MailSenderT.as_view(), name='mail_sender'),
 ]
