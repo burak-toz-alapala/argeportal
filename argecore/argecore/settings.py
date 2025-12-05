@@ -70,7 +70,7 @@ ROOT_URLCONF = 'argecore.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['interfaces.templates'],
+        'DIRS': [BASE_DIR / 'interfaces' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -178,12 +178,13 @@ DJOSER = {
     "SEND_ACTIVATION_EMAIL": False,  # email aktivasyon aç/kapa
     "PASSWORD_RESET_CONFIRM_URL": "password/reset/confirm/{uid}/{token}",
     "ACTIVATION_URL": "activate/{uid}/{token}",
+    "PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND": True,
 }
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'Tr-tr'
 
 TIME_ZONE = 'UTC'
 
@@ -203,6 +204,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'interfaces/uploads/static')
 STATICFILES_DIRS = (
   os.path.join(BASE_DIR,  'interfaces/static/'),
 )
+LOGIN_URL = '/login'  # kendi login sayfanın URL’si
+# SITE_URL = "http://127.0.0.1:8000"
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

@@ -1,4 +1,5 @@
-from django.shortcuts import render
+import requests
+from django.shortcuts import render, redirect
 
 # Create your views here.
 # users/views.py
@@ -12,6 +13,8 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.conf import settings
 from .models import UserType
 from .serializers import UserSerializer, UserTypeSerializer, EmailTokenObtainPairSerializer
 
@@ -70,3 +73,25 @@ class LogoutView(APIView):
         
         # Frontend token temizleyecek, backend sadece success döner
         return Response({"detail": "Başarıyla çıkış yapıldı."}, status=status.HTTP_200_OK)
+    
+def password_reset_view(request):
+    if request.method == "POST":
+        email = request.POST.get("email")
+        # Sunucunun IP veya domaini otomatik bulunur
+        url = request.build_absolute_uri("/auth/users/reset_password/")
+
+        # Djoser endpointine POST et
+        response = requests.post(url, data={"email": email})
+
+        # Djoser her zaman 204 döner → başarı
+        if response.status_code == 204:
+            return redirect("password_reset_done")
+
+        messages.error(request, "Bir hata oluştu. Lütfen tekrar deneyin.")
+    
+    return render(request, "password_reset.html")
+
+def password_reset_done(request):
+    return render(request, "password_reset_done.html")
+
+

@@ -22,5 +22,6 @@ urlpatterns = [
     path('tmp', tmp_page, name='tmp'),
     path('login', login_page, name='login'),
     path('no-permissions', no_permissions_page, name='no-permissions'),
+    path('profile', profile_page, name='profile'),
     path('mail_sender', MailSenderT.as_view(), name='mail_sender'),
 ]

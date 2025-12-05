@@ -34,6 +34,7 @@ class Profile(models.Model):
     phone = models.CharField(max_length=20, blank=True)
     birth_date = models.DateField(null=True, blank=True)
     user_type = models.ForeignKey(UserType, null=True, blank=True, on_delete=models.SET_NULL)
+    title = models.CharField(max_length=120, blank=True, null=True)
     image = models.ImageField(null=True, blank=True, upload_to=rename_image, default="profil_foto/6b9f250c.png",)
 
     def save(self, *args, **kwargs):

@@ -1,14 +1,35 @@
-
+{% load static %}
 <nav class="main-header navbar navbar-expand  aqua-navbar">
   <div class="left-section">
-    <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars" style="color:white"></i></a>
+    <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+      <i class="fas fa-bars" style="color:white"></i>
+    </a>
     <a href="/" class="logo"></a>
   </div>
-        
+
   <div class="nav-links">
-    <a href="#">Anasayfa</a>
-    <a href="#">Hakkımızda</a>
-    <a href="#">Galeri</a>
-    <a onclick="logout()">Çıkış</a>
+
+
+    <!-- Burada sadece container tipi değiştirdim (div) — iç içe <a> hatasını kaldırmak için -->
+    <div class="dropdown user user-menu d-inline-block">
+      <a href="#" class="" id="userDropdown" data-toggle="dropdown"
+        aria-haspopup="true" aria-expanded="false">{{ request.user.get_full_name }}
+      </a>
+
+      <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown" style="min-width:100px;">
+        <!-- Menu Footer-->
+          
+        <li class="user-settings user-header d-flex justify-content-between px-3 pb-2">
+          <div>
+            <a href="/profile" class="btn btn-sm btn-outline-secondary">Profil</a>
+          </div>
+          <div>
+            <a href="javascript:void(0)" onclick="logout()" class="btn btn-sm btn-danger">Çıkış</a>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <!-- /user dropdown -->
+
   </div>
 </nav>

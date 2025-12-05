@@ -1,0 +1,51 @@
+<nav class="main-header navbar navbar-expand  aqua-navbar">
+  <div class="left-section">
+    <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+      <i class="fas fa-bars" style="color:white"></i>
+    </a>
+    <a href="/" class="logo"></a>
+  </div>
+
+  <div class="nav-links">
+    <a href="#">Anasayfa</a>
+    <a href="#">Hakkımızda</a>
+    <a href="#">Galeri</a>
+    <a onclick="logout()" href="javascript:void(0)">Çıkış</a>
+
+    <!-- Burada sadece container tipi değiştirdim (div) — iç içe <a> hatasını kaldırmak için -->
+    <div class="dropdown user user-menu d-inline-block">
+      <a href="#" class="dropdown-toggle d-flex align-items-center" id="userDropdown"
+         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <img src="/static/user.png" class="user-image rounded-circle" alt="User Image" style="width:32px;height:32px;object-fit:cover;">
+        <span class="ml-2">adsoayad-1</span>
+      </a>
+
+      <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown" style="min-width:220px;">
+        <!-- User image -->
+        <li class="user-header text-center p-3">
+          <img src="/static/user.png" class="img-circle mb-2" alt="User Image" style="width:64px;height:64px;object-fit:cover;border-radius:50%;">
+          <p style="margin:0;">
+            <strong>mail-1</strong><br>
+            adı-1
+            <br>
+            <small>cep-1</small>
+          </p>
+        </li>
+
+        <li class="dropdown-divider"></li>
+
+        <!-- Menu Footer-->
+        <li class="user-footer d-flex justify-content-between px-3 pb-2">
+          <div>
+            <a href="#" class="btn btn-sm btn-outline-secondary">Profil</a>
+          </div>
+          <div>
+            <a href="javascript:void(0)" onclick="logout()" class="btn btn-sm btn-danger">Çıkış Yap</a>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <!-- /user dropdown -->
+
+  </div>
+</nav>

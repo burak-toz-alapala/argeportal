@@ -60,7 +60,29 @@ border-image: linear-gradient(90deg, #24e58f, #00d2ff) 1;
   transition: transform 0.4s ease-out;
 }
 
+.aqua-navbar .nav-links .user-menu a::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #00d2ff, #24e58f);
+  transform: scaleX(0);
+  transform-origin: bottom right;
+  transition: transform 0.4s ease-out;
+}
+
 .aqua-navbar .nav-links a:hover::after {
   transform: scaleX(1);
   transform-origin: bottom left;
 }
+
+.user-settings {
+  gap: 1rem;
+}
+
+.user-settings a {
+  margin-left: 0px !important;
+}
+
