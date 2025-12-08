@@ -35,7 +35,7 @@ class Profile(models.Model):
     birth_date = models.DateField(null=True, blank=True)
     user_type = models.ForeignKey(UserType, null=True, blank=True, on_delete=models.SET_NULL)
     title = models.CharField(max_length=120, blank=True, null=True)
-    image = models.ImageField(null=True, blank=True, upload_to=rename_image, default="profil_foto/6b9f250c.png",)
+    image = models.ImageField(null=True, blank=True, upload_to=rename_image, default="profil_foto/253ab7fe.png",)
 
     def save(self, *args, **kwargs):
         ### IMAGE RESIZE

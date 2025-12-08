@@ -1118,40 +1118,49 @@
       // > 1 && < 2 -> type = "Intermediate slenderness";
       // > 0.4 && <= 1 -> type = "Squat";
       // <= 0.4 -> type = "Retaining";
-       if (type == "Slender"){
-         $.ajax({
-           type: "POST",
-           url: "/api/silo_form/",
-           headers: {
-             'Content-Type': 'application/json',
-             // 'X-CSRFToken': '{{ csrf_token }}',       // CSRF token header
-             'Authorization': 'Bearer ' + accessToken // JWT token header
-           },
-           data: JSON.stringify(data),
-           contentType: "application/json",
-           success: function (response) {
-             renderChartData(response.chart_data, 'fillPressures', 'FillPressures');
-             renderChartData(response.discharge_chart_data, 'discPressures', 'DiscPressures');
-             renderChartData(response.fill_chart_data_hopper, 'fillHopperPressures', 'FillHopperPressures');
-             renderChartData(response.discharge_chart_data_hopper, 'discHopperPressures', 'DiscHopperPressures');
-             saveChartDataToCookie("FillPressures", response.chart_data.dates, response.chart_data.series, "FillPressures");
-             saveChartDataToCookie("DiscPressures", response.discharge_chart_data.dates, response.discharge_chart_data.series, "DiscPressures");
-             saveChartDataToCookie("FillHopperPressures", response.fill_chart_data_hopper.dates, response.fill_chart_data_hopper.series, "FillHopperPressures");
-             saveChartDataToCookie("DiscHopperPressures", response.discharge_chart_data_hopper.dates, response.discharge_chart_data_hopper.series, "DiscHopperPressures");
-             document.getElementById("formulaDiv_silo_fill").innerHTML = response.formul_dict.fill_phf + response.formul_dict.fill_pwf + response.formul_dict.fill_pvf;
-             document.getElementById("formulaDiv_silo_disc").innerHTML = response.formul_dict.disc_phf + response.formul_dict.disc_pwf + response.formul_dict.disc_pvf;
-             document.getElementById("formulaDiv_hopper_fill").innerHTML = response.formul_dict.hopper_fill_pnf + response.formul_dict.hopper_fill_ptf;
-             document.getElementById("formulaDiv_hopper_disc").innerHTML = response.formul_dict.hopper_disc_pnf + response.formul_dict.hopper_disc_ptf;
-   
-             $('#classModal').modal('hide');
-           },
-           error: function (xhr, status, error) {
-             alert("Bir hata oluştu: " + xhr.responseJSON.detail);
-           }
-         });
-       }else{
-        alert(type + " Silo tipine henüz hesaplama yapılmıyor.");
-       }
+      if (type == "Slender") {
+        $.ajax({
+          type: "POST",
+          url: "/api/silo_form/",
+          headers: {
+            'Content-Type': 'application/json',
+            // 'X-CSRFToken': '{{ csrf_token }}',       // CSRF token header
+            'Authorization': 'Bearer ' + accessToken // JWT token header
+          },
+          data: JSON.stringify(data),
+          contentType: "application/json",
+          success: function (response) {
+            renderChartData(response.chart_data, 'fillPressures', 'FillPressures');
+            renderChartData(response.discharge_chart_data, 'discPressures', 'DiscPressures');
+            renderChartData(response.fill_chart_data_hopper, 'fillHopperPressures', 'FillHopperPressures');
+            renderChartData(response.discharge_chart_data_hopper, 'discHopperPressures', 'DiscHopperPressures');
+            saveChartDataToCookie("FillPressures", response.chart_data.dates, response.chart_data.series, "FillPressures");
+            saveChartDataToCookie("DiscPressures", response.discharge_chart_data.dates, response.discharge_chart_data.series, "DiscPressures");
+            saveChartDataToCookie("FillHopperPressures", response.fill_chart_data_hopper.dates, response.fill_chart_data_hopper.series, "FillHopperPressures");
+            saveChartDataToCookie("DiscHopperPressures", response.discharge_chart_data_hopper.dates, response.discharge_chart_data_hopper.series, "DiscHopperPressures");
+            document.getElementById("formulaDiv_silo_fill").innerHTML = response.formul_dict.fill_phf + response.formul_dict.fill_pwf + response.formul_dict.fill_pvf;
+            document.getElementById("formulaDiv_silo_disc").innerHTML = response.formul_dict.disc_phf + response.formul_dict.disc_pwf + response.formul_dict.disc_pvf;
+            document.getElementById("formulaDiv_hopper_fill").innerHTML = response.formul_dict.hopper_fill_pnf + response.formul_dict.hopper_fill_ptf;
+            document.getElementById("formulaDiv_hopper_disc").innerHTML = response.formul_dict.hopper_disc_pnf + response.formul_dict.hopper_disc_ptf;
+
+            $('#classModal').modal('hide');
+          },
+          error: function (xhr, status, error) {
+            alert("Bir hata oluştu: " + xhr.responseJSON.detail);
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'İşlem Başarısız',
+          html: type + " Silo tipine henüz hesaplama yapılmıyor.",
+          confirmButtonText: 'Anladım',
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
+
+        // alert(type + " Silo tipine henüz hesaplama yapılmıyor.");
+      }
 
     } else {
       alert("Geçersiz seçim! Lütfen Class seçin.");
