@@ -3,6 +3,12 @@ from django.shortcuts import render, redirect
 
 # Create your views here.
 # users/views.py
+from rest_framework import viewsets
+from rest_framework import serializers
+from django.contrib.auth.models import User, Group
+from .models import UserType, Profile
+from .serializers import UserSerializerT, GroupSerializerT, UserTypeSerializerT
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework import viewsets
 from rest_framework import generics
@@ -95,3 +101,19 @@ def password_reset_done(request):
     return render(request, "password_reset_done.html")
 
 
+
+class UserViewSetT(viewsets.ModelViewSet):
+    queryset = User.objects.all().select_related("profile")
+    serializer_class = UserSerializerT
+    permission_classes = [IsAdminUser] 
+
+class GroupViewSetT(viewsets.ModelViewSet):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializerT
+    permission_classes = [IsAdminUser] 
+
+
+class UserTypeViewSetT(viewsets.ModelViewSet):
+    queryset = UserType.objects.all()
+    serializer_class = UserTypeSerializerT
+    permission_classes = [IsAdminUser] 

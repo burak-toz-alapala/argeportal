@@ -2,7 +2,7 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 from .models import Profile, UserType
 
@@ -96,3 +96,77 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
     # def get_username(self, instance):
     #     user = User.objects.get(email=instance.email)
     #     return user.username
+
+
+class ProfileSerializerT(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['phone', 'birth_date', 'user_type', 'title', 'image']
+
+
+class UserSerializerT(serializers.ModelSerializer):
+    profile = ProfileSerializerT()
+    groups = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Group.objects.all()
+    )
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'first_name', 'last_name',
+            'email', 'password',
+            'groups',
+            'profile',
+        ]
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def create(self, validated_data):
+        profile_data = validated_data.pop("profile")
+        groups = validated_data.pop("groups")
+
+        # 1) User oluştur
+        user = User.objects.create_user(**validated_data)
+
+        # 2) Grupları ekle
+        user.groups.set(groups)
+
+        # 3) Profil oluştur
+        Profile.objects.filter(user=user).update(**profile_data)
+
+        return user
+
+    def update(self, instance, validated_data):
+        profile_data = validated_data.pop('profile', None)
+        groups = validated_data.pop('groups', None)
+
+        # User güncelle
+        for attr, value in validated_data.items():
+            if attr == "password":
+                instance.set_password(value)
+            else:
+                setattr(instance, attr, value)
+
+        instance.save()
+
+        # Grupları güncelle
+        if groups is not None:
+            instance.groups.set(groups)
+
+        # Profili güncelle
+        if profile_data:
+            Profile.objects.filter(user=instance).update(**profile_data)
+
+        return instance
+
+class GroupSerializerT(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ['id', 'name']
+
+    
+class UserTypeSerializerT(serializers.ModelSerializer):
+    class Meta:
+        model = UserType
+        fields = '__all__'
