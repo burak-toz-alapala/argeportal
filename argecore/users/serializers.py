@@ -12,6 +12,13 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ['phone', 'birth_date', 'user_type', 'image']
 
+class ProfilFotoSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Profile
+        fields = ['image']
+
+
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer()  # Nested serializer
     token = serializers.SerializerMethodField(read_only=True)  # token alanı

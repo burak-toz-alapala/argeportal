@@ -7,10 +7,9 @@ from rest_framework import viewsets
 from rest_framework import serializers
 from django.contrib.auth.models import User, Group
 from .models import UserType, Profile
-from .serializers import UserSerializerT, GroupSerializerT, UserTypeSerializerT
+from .serializers import UserSerializerT, GroupSerializerT, UserTypeSerializerT, ProfilFotoSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-from rest_framework import viewsets
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
@@ -21,7 +20,6 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.conf import settings
-from .models import UserType
 from .serializers import UserSerializer, UserTypeSerializer, EmailTokenObtainPairSerializer
 
 
@@ -117,3 +115,26 @@ class UserTypeViewSetT(viewsets.ModelViewSet):
     queryset = UserType.objects.all()
     serializer_class = UserTypeSerializerT
     permission_classes = [IsAdminUser] 
+
+class ProfilFotoUpdateView(generics.UpdateAPIView):
+
+    serializer_class = ProfilFotoSerializer
+    permission_classes = [IsAuthenticated]
+
+    # def permission_denied(self, request, message=None, code=None):
+    #     """
+    #     If request is not permitted, determine what kind of exception to raise.
+    #     """
+    #     if request.authenticators and not request.successful_authenticator:
+    #         raise CustomAuthenticationFailed()
+    #     raise exceptions.PermissionDenied(detail=message, code=code)
+
+    def get_object(self):
+        profil_nesnesi = self.request.user.profile
+        return profil_nesnesi
+    
+    def patch(self, request, *args, **kwargs):
+        response = super().patch(request, *args, **kwargs)
+        return Response({
+            "image": request.user.profile.image.url
+        })

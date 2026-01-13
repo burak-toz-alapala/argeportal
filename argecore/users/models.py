@@ -30,7 +30,7 @@ def rename_image(instance, filename):
     return os.path.join(path, filename)
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     phone = models.CharField(max_length=20, blank=True)
     birth_date = models.DateField(null=True, blank=True)
     user_type = models.ForeignKey(UserType, null=True, blank=True, on_delete=models.SET_NULL)

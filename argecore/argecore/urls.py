@@ -24,7 +24,7 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-from users.views import EmailTokenObtainPairView, LogoutView, password_reset_view, password_reset_done
+from users.views import EmailTokenObtainPairView, LogoutView, password_reset_view, password_reset_done, ProfilFotoUpdateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -40,6 +40,7 @@ urlpatterns = [
     path('login/', EmailTokenObtainPairView.as_view(), name="email_token_obtain_pair"),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('refresh/', TokenRefreshView.as_view(), name="token_refresh"),
+    path("profile/photo/", ProfilFotoUpdateView.as_view(), name="profile-photo-update"),
     path('password/reset/complete/',
          auth_views.PasswordResetCompleteView.as_view(
              template_name="password_reset_complete.html"
