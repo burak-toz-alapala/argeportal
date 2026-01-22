@@ -1167,6 +1167,120 @@
     }
   }
 
+  // Form kaydetme butonu
+  function exportChartCookieData(chart_type) {
+
+    var shape = document.getElementById("sekil").value;
+    var { hacim, alan, cevre, silo_tipi: type, dc, sorth_div_long } = calculateShapeData(shape);
+    var class_type = document.getElementById("cb_class").value;
+    let data = get_form_data("silo_calculate")
+
+    data["alan"] = alan;
+    data["hacim"] = hacim;
+    data["cevre"] = cevre;
+    data["silo_tipi"] = type;
+    data["dc"] = dc;
+    data["class_type"] = class_type;
+    data["sorth_div_long"] = sorth_div_long;
+    var accessToken = sessionStorage.getItem("access");  // JWT token
+
+    let allowedClassTypes = ["1", "2", "3"];
+
+    var return_data = {
+                  dates: [],
+                  seriesData: [],
+                  fileName: "Boş"
+                };
+
+    if (allowedClassTypes.includes(class_type)) {
+      // >= 2 -> type = "Slender"
+      // > 1 && < 2 -> type = "Intermediate slenderness";
+      // > 0.4 && <= 1 -> type = "Squat";
+      // <= 0.4 -> type = "Retaining";
+      if (type == "Slender") {
+        $.ajax({
+          type: "POST",
+          url: "/api/silo_form/",
+          headers: {
+            'Content-Type': 'application/json',
+            // 'X-CSRFToken': '{{ csrf_token }}',       // CSRF token header
+            'Authorization': 'Bearer ' + accessToken // JWT token header
+          },
+          data: JSON.stringify(data),
+          contentType: "application/json",
+          success: function (response) {
+            console.log(chart_type);
+            console.log(response);
+            console.log("BHurak");
+            switch (chart_type) {
+
+              case "FillPressures":
+                // FillPressures için kayıt
+                return_data = {
+                  dates: response.chart_data.dates,
+                  seriesData: response.chart_data.series,
+                  fileName: "FillPressures"
+                };
+                break;
+
+              case "DiscPressures":
+                // DiscPressures için kayıt
+                return_data = {
+                  dates: response.discharge_chart_data.dates,
+                  seriesData: response.discharge_chart_data.series,
+                  fileName: "DiscPressures"
+                };
+                break;
+
+              case "FillHopperPressures":
+                // FillHopperPressures için kayıt
+                return_data = {
+                  dates: response.fill_chart_data_hopper.dates,
+                  seriesData: response.fill_chart_data_hopper.series,
+                  fileName: "FillHopperPressures"
+                };
+                break;
+
+              case "DiscHopperPressures":
+                // DiscHopperPressures için kayıt
+                return_data = {
+                  dates: response.discharge_chart_data_hopper.dates,
+                  seriesData: response.discharge_chart_data_hopper.series,
+                  fileName: "DiscHopperPressures"
+                };
+                break;
+
+              default:
+                console.error("Bilinmeyen chart_type:", chart_type);
+            }
+
+            downloadChartDataAsXLSX(return_data.dates, return_data.seriesData, return_data.fileName);
+
+          },
+          error: function (xhr, status, error) {
+            alert("Bir hata oluştu: " + xhr.responseJSON.detail);
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'İşlem Başarısız',
+          html: type + " Silo tipine henüz hesaplama yapılmıyor.",
+          confirmButtonText: 'Anladım',
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        });
+
+        // alert(type + " Silo tipine henüz hesaplama yapılmıyor.");
+      }
+
+    } else {
+      alert("Geçersiz seçim! Lütfen Class seçin.");
+    }
+
+
+  }
+
   function form_control_empty_fields(form_id) {
     const form = document.getElementById(form_id);
 
@@ -1311,15 +1425,18 @@
     return null;
   }
 
-  function exportChartCookieData(chartId) {
-    const data = getChartDataFromCookie(chartId);
-    if (!data) {
-      alert("Bu grafik için veri bulunamadı!");
-      return;
-    }
+  // function exportChartCookieData1(chartId) {
+  //   // const data = getChartDataFromCookie(chartId);
+        
+  //   const data = get_excel_data(chartId);
+  //   if (!data) {
+  //     alert("Bu grafik için veri bulunamadı!");
+  //     return;
+  //   }
 
-    downloadChartDataAsXLSX(data.dates, data.seriesData, data.fileName);
-  }
+
+
+  // }
 
 
   function func_form_kaydet(btn) {
